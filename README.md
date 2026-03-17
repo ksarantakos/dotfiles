@@ -2,18 +2,28 @@
 
 Personal dotfiles managed with [chezmoi](https://chezmoi.io) and [1Password](https://1password.com) for secrets.
 
-## What's tracked
+## How this repo works
+
+This repo is the source of truth for machine setup. `chezmoi apply` does three things:
+
+- renders tracked dotfiles into `$HOME`
+- fills secret-backed templates from 1Password
+- runs one-time bootstrap scripts for tools that need extra setup
+
+## What's managed
 
 | File | Description |
 |------|-------------|
-| `~/.zshrc` | Zsh shell config (oh-my-zsh, pyenv, starship) |
+| `~/.zshrc` | Zsh shell config (oh-my-zsh, pyenv, powerlevel10k) |
 | `~/.zprofile` | Brew shellenv |
 | `~/.gitconfig` | Git user config, SSH signing |
 | `~/.ssh/config` | SSH host config + 1Password agent |
-| `~/.config/starship.toml` | Starship prompt theme |
+| `~/.config/iterm2/com.googlecode.iterm2.plist` | Full iTerm2 preferences loaded from a custom prefs folder |
+| `~/.p10k.zsh` | Powerlevel10k prompt theme |
 | `~/.npmrc` | NPM registry config (token fetched from 1Password) |
 | `~/.yarnrc` | Yarn config |
 | `~/Brewfile` | Homebrew packages and casks |
+| `run_once_after_*` | One-time setup hooks for tools that need post-apply configuration |
 
 ## Prerequisites
 
@@ -22,20 +32,29 @@ Personal dotfiles managed with [chezmoi](https://chezmoi.io) and [1Password](htt
 - [1Password CLI](https://developer.1password.com/docs/cli): `brew install --cask 1password-cli`
 - Sign in to 1Password CLI: `op signin`
 
-## Fresh machine setup
+## Bootstrap a machine
 
 ```sh
-# 1. Sign in to 1Password CLI
+# 1. Sign in to 1Password
 op signin
 
-# 2. Pull and apply all dotfiles in one command
+# 2. Pull and apply dotfiles
 chezmoi init --apply https://github.com/ksarantakos/dotfiles
 
-# 3. Install all Homebrew packages
+# 3. Install Homebrew packages and casks
 brew bundle --file ~/.local/share/chezmoi/Brewfile
+
+# 4. Re-apply once packages are installed
+chezmoi apply
 ```
 
-That's it. chezmoi will fetch secrets from 1Password automatically during apply.
+The second `chezmoi apply` matters. It lets the one-time setup scripts configure tools that may not
+exist during the first run, including:
+
+- cloning Powerlevel10k into the Oh My Zsh custom themes directory
+- pointing iTerm2 at the tracked custom prefs folder under `~/.config/iterm2`
+
+Open a new shell after that.
 
 ## Secrets and 1Password
 
@@ -62,44 +81,44 @@ chezmoi edit ~/.my-config-file
 # e.g. token={{ onepasswordRead "op://Private/My Token/credential" }}
 ```
 
-## Day-to-day usage
+## Daily workflow
 
-**Edit a dotfile:**
+Edit through chezmoi:
+
 ```sh
-chezmoi edit ~/.zshrc        # opens in $EDITOR
+chezmoi edit ~/.zshrc
+chezmoi apply
 ```
 
-**After editing a dotfile directly** (outside of chezmoi edit):
+If you changed a live file directly, sync it back:
+
 ```sh
-chezmoi re-add ~/.zshrc      # syncs changes back into the source directory
+chezmoi re-add ~/.zshrc
+chezmoi re-add ~/.p10k.zsh
+chezmoi re-add ~/.config/iterm2/com.googlecode.iterm2.plist
 ```
 
-**Preview what chezmoi would change:**
+Preview pending changes:
+
 ```sh
 chezmoi diff
 ```
 
-**Apply the latest dotfiles:**
+Apply the repo state:
+
 ```sh
 chezmoi apply
 ```
 
-**Commit and push changes:**
-```sh
-cd ~/.local/share/chezmoi
-git add -A
-git commit -m "your message"
-git push
-```
+Commit and push:
 
-Or use the chezmoi shorthand:
 ```sh
 chezmoi git -- add -A
 chezmoi git -- commit -m "your message"
 chezmoi git -- push
 ```
 
-## Adding a new dotfile
+## Add a new dotfile
 
 ```sh
 chezmoi add ~/.my-new-dotfile
@@ -108,10 +127,10 @@ chezmoi git -- commit -m "add my-new-dotfile"
 chezmoi git -- push
 ```
 
-## Keeping packages up to date
+## Refresh packages
 
 ```sh
-brew bundle --file ~/Brewfile   # install any missing packages
-brew bundle dump --force        # overwrite Brewfile with currently installed packages
+brew bundle --file ~/.local/share/chezmoi/Brewfile
+brew bundle dump --force --file ~/.local/share/chezmoi/Brewfile
 chezmoi re-add ~/Brewfile
 ```
