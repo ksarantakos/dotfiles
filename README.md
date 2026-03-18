@@ -10,6 +10,9 @@ This repo is the source of truth for machine setup. `chezmoi apply` does three t
 - fills secret-backed templates from 1Password
 - runs one-time bootstrap scripts for tools that need extra setup
 
+When 1Password CLI is not authenticated, `chezmoi` will skip `~/.npmrc` so the rest of the repo
+can still apply cleanly.
+
 ## What's managed
 
 | File | Description |
@@ -22,7 +25,7 @@ This repo is the source of truth for machine setup. `chezmoi apply` does three t
 | `~/.p10k.zsh` | Powerlevel10k prompt theme |
 | `~/.npmrc` | NPM registry config (token fetched from 1Password) |
 | `~/.yarnrc` | Yarn config |
-| `~/Brewfile` | Homebrew packages and casks |
+| `Brewfile` | Homebrew packages and casks tracked in the chezmoi source dir |
 | `run_once_after_*` | One-time setup hooks for tools that need post-apply configuration |
 
 ## Prerequisites
@@ -66,6 +69,8 @@ Example template syntax used in `dot_npmrc.tmpl`:
 ```
 {{ onepasswordRead "op://VaultName/ItemName/field" }}
 ```
+
+If `op whoami` fails, `chezmoi` ignores `~/.npmrc` until 1Password is available again.
 
 To add a new secret-bearing dotfile:
 
@@ -132,5 +137,4 @@ chezmoi git -- push
 ```sh
 brew bundle --file ~/.local/share/chezmoi/Brewfile
 brew bundle dump --force --file ~/.local/share/chezmoi/Brewfile
-chezmoi re-add ~/Brewfile
 ```
