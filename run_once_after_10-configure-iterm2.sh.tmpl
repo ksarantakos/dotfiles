@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+defaults write com.googlecode.iterm2 PrefsCustomFolder -string "{{ .chezmoi.homeDir }}/.config/iterm2"
+defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool true
