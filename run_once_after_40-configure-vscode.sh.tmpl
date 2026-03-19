@@ -2,8 +2,13 @@
 set -eu
 
 if ! command -v code >/dev/null 2>&1; then
-  echo "VS Code CLI (code) not found, skipping VS Code setup" >&2
+  echo "VS Code CLI (code) not found — install VS Code and re-run: chezmoi apply" >&2
   exit 0
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "python3 not found — required to merge VS Code settings" >&2
+  exit 1
 fi
 
 # Install Tokyo Night theme extension
