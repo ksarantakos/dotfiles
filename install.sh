@@ -18,8 +18,17 @@ fi
 brew install chezmoi
 brew install --cask 1password-cli
 
-# Sign in to 1Password
-op signin
+echo ""
+echo "1Password sign-in is only required if this machine needs access to the private NBC News Nexus NPM registry."
+echo "Skip it if you only need public npm packages."
+echo ""
+read -r "?Sign in to 1Password now? [y/N] " sign_in_choice
+
+if [[ "$sign_in_choice" =~ ^[Yy]$ ]]; then
+  op signin
+else
+  echo "Skipping 1Password sign-in. ~/.npmrc will not be rendered; private Nexus packages will be unavailable."
+fi
 
 # Pull and apply dotfiles (also runs run_once_before_* scripts, e.g. Oh My Zsh install)
 chezmoi init --apply https://github.com/ksarantakos/dotfiles
