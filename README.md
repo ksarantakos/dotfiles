@@ -28,36 +28,31 @@ can still apply cleanly.
 | `Brewfile` | Homebrew packages and casks tracked in the chezmoi source dir |
 | `run_once_after_*` | One-time setup hooks for tools that need post-apply configuration |
 
-## Prerequisites
-
-- [Homebrew](https://brew.sh)
-- [chezmoi](https://chezmoi.io): `brew install chezmoi`
-- [1Password CLI](https://developer.1password.com/docs/cli): `brew install --cask 1password-cli`
-- Sign in to 1Password CLI: `op signin`
-
-## Bootstrap a machine
+## Bootstrap a new machine
 
 ```sh
-# 1. Sign in to 1Password
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ksarantakos/dotfiles/master/install.sh)"
+```
+
+The script will:
+
+1. Install Homebrew if not present
+2. Install chezmoi and the 1Password CLI
+3. Optionally sign in to 1Password (only needed for access to the private NBC News Nexus NPM registry)
+4. Pull and apply dotfiles (including Oh My Zsh install)
+5. Install all Homebrew packages and casks
+6. Re-apply so post-install hooks run (Powerlevel10k, iTerm2 prefs)
+
+Open a new shell after it completes.
+
+If you skipped 1Password sign-in and later need access to the private NBC News Nexus NPM registry:
+
+```sh
 op signin
-
-# 2. Pull and apply dotfiles
-chezmoi init --apply https://github.com/ksarantakos/dotfiles
-
-# 3. Install Homebrew packages and casks
-brew bundle --file ~/.local/share/chezmoi/Brewfile
-
-# 4. Re-apply once packages are installed
 chezmoi apply
 ```
 
-The second `chezmoi apply` matters. It lets the one-time setup scripts configure tools that may not
-exist during the first run, including:
-
-- cloning Powerlevel10k into the Oh My Zsh custom themes directory
-- pointing iTerm2 at the tracked custom prefs folder under `~/.config/iterm2`
-
-Open a new shell after that.
+That will render `~/.npmrc` with the Nexus registry and auth token.
 
 ## Secrets and 1Password
 
@@ -138,3 +133,11 @@ chezmoi git -- push
 brew bundle --file ~/.local/share/chezmoi/Brewfile
 brew bundle dump --force --file ~/.local/share/chezmoi/Brewfile
 ```
+
+## Smoke test
+
+```sh
+./test/smoke-install.sh
+```
+
+This verifies the bootstrap script's command flow for both the sign-in and skip paths without touching the network or real Homebrew state.
