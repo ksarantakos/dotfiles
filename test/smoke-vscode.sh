@@ -62,4 +62,36 @@ if ! grep -q '"my.existing.setting"' "$settings_file"; then
   exit 1
 fi
 
+# Missing code CLI: script should exit 0 and skip setup
+no_code_log="$workdir/no-code.log"
+if env PATH="$workdir/empty-bin:$PATH" TEST_LOG="$no_code_log" HOME="$home_dir" \
+    bash "$rendered" 2>&1 | grep -q "not found"; then
+  : # expected
+else
+  echo "Expected 'not found' message when code is missing" >&2
+  exit 1
+fi
+
+exit_code=0
+env PATH="$workdir/empty-bin:$PATH" TEST_LOG="$no_code_log" HOME="$home_dir" \
+  bash "$rendered" >/dev/null 2>/dev/null || exit_code=$?
+if [ "$exit_code" -ne 0 ]; then
+  echo "Expected exit 0 when code is missing, got $exit_code" >&2
+  exit 1
+fi
+
+# Missing python3: script should exit non-zero
+no_python_bin="$workdir/no-python-bin"
+mkdir -p "$no_python_bin"
+cp "$bin_dir/code" "$no_python_bin/code"
+# Stub python3 as absent by creating a PATH without it but with code
+no_python_log="$workdir/no-python.log"
+exit_code=0
+env PATH="$no_python_bin" TEST_LOG="$no_python_log" HOME="$home_dir" \
+  bash "$rendered" >/dev/null 2>/dev/null || exit_code=$?
+if [ "$exit_code" -eq 0 ]; then
+  echo "Expected non-zero exit when python3 is missing" >&2
+  exit 1
+fi
+
 echo "VS Code smoke test passed"
