@@ -133,3 +133,11 @@ chezmoi git -- push
 brew bundle --file ~/.local/share/chezmoi/Brewfile
 brew bundle dump --force --file ~/.local/share/chezmoi/Brewfile
 ```
+
+## Smoke test
+
+```sh
+./test/smoke-install.sh
+```
+
+This verifies the bootstrap script's command flow for both the sign-in and skip paths without touching the network or real Homebrew state.

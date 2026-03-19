@@ -22,7 +22,8 @@ echo ""
 echo "1Password sign-in is only required if this machine needs access to the private NBC News Nexus NPM registry."
 echo "Skip it if you only need public npm packages."
 echo ""
-read -r "?Sign in to 1Password now? [y/N] " sign_in_choice
+printf 'Sign in to 1Password now? [y/N] '
+read -r sign_in_choice
 
 if [[ "$sign_in_choice" =~ ^[Yy]$ ]]; then
   op signin
