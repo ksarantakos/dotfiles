@@ -29,10 +29,12 @@ brew "zsh-syntax-highlighting"
 brew "gantoreno/macfetch/macfetch"
 brew "snyk/tap/snyk"
 
+cask "1password"
 cask "1password-cli"
 cask "basictex"
 cask "codex"
 cask "copilot-cli"
 # Keep both terminal emulators installed intentionally.
 cask "iterm2"
+cask "visual-studio-code"
 cask "warp"
