@@ -1,0 +1,24 @@
+{
+  "[Tokyo Night]": {
+    "editor.background": "#1A1B27",
+    "terminal.background": "#1A1B27",
+    "terminal.foreground": "#BBC6F6",
+    "terminal.ansiBlack": "#2A2734",
+    "terminal.ansiRed": "#F7768E",
+    "terminal.ansiGreen": "#00BCDB",
+    "terminal.ansiYellow": "#E1C381",
+    "terminal.ansiBlue": "#7AA2F7",
+    "terminal.ansiMagenta": "#E69F51",
+    "terminal.ansiCyan": "#2AB7E7",
+    "terminal.ansiWhite": "#9B84EE",
+    "terminal.ansiBrightBlack": "#454159",
+    "terminal.ansiBrightRed": "#FF9E9C",
+    "terminal.ansiBrightGreen": "#4EF4DF",
+    "terminal.ansiBrightYellow": "#FFD580",
+    "terminal.ansiBrightBlue": "#A9B8FF",
+    "terminal.ansiBrightMagenta": "#FFB86C",
+    "terminal.ansiBrightCyan": "#24D5F8",
+    "terminal.ansiBrightWhite": "#EEEBFF",
+    "terminalCursor.foreground": "#B2B2B2"
+  }
+}

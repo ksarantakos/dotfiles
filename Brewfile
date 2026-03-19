@@ -35,4 +35,5 @@ cask "codex"
 cask "copilot-cli"
 # Keep both terminal emulators installed intentionally.
 cask "iterm2"
+cask "visual-studio-code"
 cask "warp"
