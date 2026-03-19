@@ -14,9 +14,11 @@ if ! command -v brew >/dev/null 2>&1; then
   fi
 fi
 
-# Install chezmoi and 1Password CLI
-brew install chezmoi
+# Install 1Password app, CLI, and chezmoi
+# 1Password app must be installed before the CLI so the SSH agent socket is available
+brew install --cask 1password
 brew install --cask 1password-cli
+brew install chezmoi
 
 echo ""
 echo "1Password sign-in is only required if this machine needs access to the private NBC News Nexus NPM registry."
