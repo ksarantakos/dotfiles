@@ -13,7 +13,7 @@ code --install-extension enkia.tokyo-night --force
 settings_dir="$HOME/Library/Application Support/Code/User"
 mkdir -p "$settings_dir"
 
-repo_dir="$(cd "$(dirname "$0")" && pwd)"
+repo_dir="{{ .chezmoi.sourceDir }}"
 
 python3 - <<PYEOF
 import json, pathlib
