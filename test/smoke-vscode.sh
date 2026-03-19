@@ -62,35 +62,50 @@ if ! grep -q '"my.existing.setting"' "$settings_file"; then
   exit 1
 fi
 
-# Missing code CLI: script should exit 0 and skip setup
-no_code_log="$workdir/no-code.log"
-if env PATH="$workdir/empty-bin:$PATH" TEST_LOG="$no_code_log" HOME="$home_dir" \
-    bash "$rendered" 2>&1 | grep -q "not found"; then
-  : # expected
-else
-  echo "Expected 'not found' message when code is missing" >&2
-  exit 1
-fi
+# Capture absolute paths before any PATH manipulation
+bash_bin=$(command -v bash)
+python3_bin=$(command -v python3)
 
+# Missing code CLI: script should exit 0 (graceful skip) with a "not found" message.
+# PATH is fully isolated — only python3 is available — so code cannot be found via inheritance.
+no_code_bin="$workdir/no-code-bin"
+mkdir -p "$no_code_bin"
+ln -s "$python3_bin" "$no_code_bin/python3"
+
+no_code_stderr="$workdir/no-code.stderr"
 exit_code=0
-env PATH="$workdir/empty-bin:$PATH" TEST_LOG="$no_code_log" HOME="$home_dir" \
-  bash "$rendered" >/dev/null 2>/dev/null || exit_code=$?
+env PATH="$no_code_bin" TEST_LOG="/dev/null" HOME="$home_dir" \
+  "$bash_bin" "$rendered" >/dev/null 2>"$no_code_stderr" || exit_code=$?
+
 if [ "$exit_code" -ne 0 ]; then
   echo "Expected exit 0 when code is missing, got $exit_code" >&2
   exit 1
 fi
+if ! grep -q "not found" "$no_code_stderr"; then
+  echo "Expected 'not found' message in stderr when code is missing" >&2
+  cat "$no_code_stderr" >&2
+  exit 1
+fi
 
-# Missing python3: script should exit non-zero
+# Missing python3: script should exit non-zero with a "python3 not found" message,
+# confirming the guard was reached (not some earlier failure).
+# PATH is fully isolated — only code stub is available.
 no_python_bin="$workdir/no-python-bin"
 mkdir -p "$no_python_bin"
 cp "$bin_dir/code" "$no_python_bin/code"
-# Stub python3 as absent by creating a PATH without it but with code
-no_python_log="$workdir/no-python.log"
+
+no_python_stderr="$workdir/no-python.stderr"
 exit_code=0
-env PATH="$no_python_bin" TEST_LOG="$no_python_log" HOME="$home_dir" \
-  bash "$rendered" >/dev/null 2>/dev/null || exit_code=$?
+env PATH="$no_python_bin" TEST_LOG="/dev/null" HOME="$home_dir" \
+  "$bash_bin" "$rendered" >/dev/null 2>"$no_python_stderr" || exit_code=$?
+
 if [ "$exit_code" -eq 0 ]; then
   echo "Expected non-zero exit when python3 is missing" >&2
+  exit 1
+fi
+if ! grep -q "python3 not found" "$no_python_stderr"; then
+  echo "Expected 'python3 not found' in stderr — guard may not have been reached" >&2
+  cat "$no_python_stderr" >&2
   exit 1
 fi
 
