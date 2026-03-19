@@ -1,0 +1,5 @@
+{{- /* Ignore templates that require 1Password when op is unavailable or unresponsive. */ -}}
+{{- $opAvailable := eq (trim (output "sh" "-c" "if command -v op >/dev/null 2>&1 && timeout 5 op whoami >/dev/null 2>&1; then echo yes; fi")) "yes" -}}
+{{- if not $opAvailable -}}
+.npmrc
+{{- end -}}
