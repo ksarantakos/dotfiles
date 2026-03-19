@@ -15,7 +15,8 @@ if ! command -v brew >/dev/null 2>&1; then
 fi
 
 # Install chezmoi and 1Password CLI
-brew install chezmoi 1password-cli
+brew install chezmoi
+brew install --cask 1password-cli
 
 # Sign in to 1Password
 op signin
