@@ -29,6 +29,7 @@ brew "zsh-syntax-highlighting"
 brew "gantoreno/macfetch/macfetch"
 brew "snyk/tap/snyk"
 
+cask "1password"
 cask "1password-cli"
 cask "basictex"
 cask "codex"
