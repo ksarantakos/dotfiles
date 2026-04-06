@@ -16,12 +16,7 @@ cat >"$bin_dir/chezmoi" <<'EOF'
 printf 'chezmoi %s\n' "$*" >>"$TEST_LOG"
 EOF
 
-cat >"$bin_dir/op" <<'EOF'
-#!/bin/sh
-printf 'op %s\n' "$*" >>"$TEST_LOG"
-EOF
-
-chmod +x "$bin_dir/chezmoi" "$bin_dir/op"
+chmod +x "$bin_dir/chezmoi"
 
 assert_contains() {
   pattern=$1
@@ -63,7 +58,11 @@ if [ "$OS" = "Darwin" ]; then
 #!/bin/sh
 printf 'brew %s\n' "$*" >>"$TEST_LOG"
 EOF
-  chmod +x "$bin_dir/brew"
+  cat >"$bin_dir/op" <<'EOF'
+#!/bin/sh
+printf 'op %s\n' "$*" >>"$TEST_LOG"
+EOF
+  chmod +x "$bin_dir/brew" "$bin_dir/op"
 
   yes_log="$workdir/yes.log"
   run_case "y" "$yes_log"
@@ -92,16 +91,16 @@ elif [ "$OS" = "Linux" ]; then
 #!/bin/sh
 printf 'sudo %s\n' "$*" >>"$TEST_LOG"
 EOF
-  cat >"$bin_dir/wget" <<'EOF'
+  cat >"$bin_dir/curl" <<'EOF'
 #!/bin/sh
-printf 'wget %s\n' "$*" >>"$TEST_LOG"
+printf 'curl %s\n' "$*" >>"$TEST_LOG"
 EOF
   cat >"$bin_dir/dpkg" <<'EOF'
 #!/bin/sh
 [ "$1" = "--print-architecture" ] && echo "amd64"
 printf 'dpkg %s\n' "$*" >>"$TEST_LOG"
 EOF
-  chmod +x "$bin_dir/sudo" "$bin_dir/wget" "$bin_dir/dpkg"
+  chmod +x "$bin_dir/sudo" "$bin_dir/curl" "$bin_dir/dpkg"
 
   # Pre-populate apt-packages.txt so the bulk-install path is exercised
   mkdir -p "$home_dir/.local/share/chezmoi"
@@ -118,7 +117,7 @@ EOF
   # bulk apt-get install from packages file
   assert_contains "sudo apt-get install -y gnupg pandoc" "$yes_log"
   # gh install via official apt repo
-  assert_contains "wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg" "$yes_log"
+  assert_contains "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg" "$yes_log"
   assert_contains "sudo apt-get install -y gh" "$yes_log"
   # eza best-effort install
   assert_contains "sudo apt-get install -y eza" "$yes_log"
