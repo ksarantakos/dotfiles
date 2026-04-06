@@ -12,18 +12,25 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 IMAGE="${1:-ubuntu:24.04}"
 PLATFORM="${2:-}"
 
-if [[ -n "$PLATFORM" ]]; then
-  platform_flag=(--platform "$PLATFORM")
-else
-  platform_flag=()
+if ! docker info >/dev/null 2>&1; then
+  echo "Error: Docker is not running. Start Docker Desktop and try again." >&2
+  exit 1
 fi
 
 echo "==> docker-ubuntu test: $IMAGE${PLATFORM:+ on $PLATFORM}"
 
-docker run --rm -i \
-  "${platform_flag[@]}" \
-  -v "$REPO_ROOT:/dotfiles:ro" \
-  -e DEBIAN_FRONTEND=noninteractive \
-  "$IMAGE" bash /dotfiles/test/docker-ubuntu-inner.sh
+# "${var[@]+"${var[@]}"}" is the bash 3.2-safe way to expand an array that may be empty under set -u
+if [[ -n "$PLATFORM" ]]; then
+  docker run --rm -i \
+    --platform "$PLATFORM" \
+    -v "$REPO_ROOT:/dotfiles:ro" \
+    -e DEBIAN_FRONTEND=noninteractive \
+    "$IMAGE" bash /dotfiles/test/docker-ubuntu-inner.sh
+else
+  docker run --rm -i \
+    -v "$REPO_ROOT:/dotfiles:ro" \
+    -e DEBIAN_FRONTEND=noninteractive \
+    "$IMAGE" bash /dotfiles/test/docker-ubuntu-inner.sh
+fi
 
 echo "==> PASSED: $IMAGE"
