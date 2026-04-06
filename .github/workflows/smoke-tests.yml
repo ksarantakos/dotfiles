@@ -19,3 +19,14 @@ jobs:
 
       - name: smoke-vscode
         run: bash test/smoke-vscode.sh
+
+  docker-ubuntu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: [ubuntu:22.04, ubuntu:24.04]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: docker-install (${{ matrix.image }})
+        run: bash test/docker-ubuntu.sh ${{ matrix.image }}
