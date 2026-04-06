@@ -11,11 +11,6 @@ mkdir -p "$bin_dir"
 home_dir="$workdir/home"
 mkdir -p "$home_dir"
 
-cat >"$bin_dir/brew" <<'EOF'
-#!/bin/sh
-printf 'brew %s\n' "$*" >>"$TEST_LOG"
-EOF
-
 cat >"$bin_dir/chezmoi" <<'EOF'
 #!/bin/sh
 printf 'chezmoi %s\n' "$*" >>"$TEST_LOG"
@@ -26,7 +21,7 @@ cat >"$bin_dir/op" <<'EOF'
 printf 'op %s\n' "$*" >>"$TEST_LOG"
 EOF
 
-chmod +x "$bin_dir/brew" "$bin_dir/chezmoi" "$bin_dir/op"
+chmod +x "$bin_dir/chezmoi" "$bin_dir/op"
 
 assert_contains() {
   pattern=$1
@@ -61,26 +56,67 @@ run_case() {
     bash "$repo_root/install.sh" >/dev/null
 }
 
-yes_log="$workdir/yes.log"
-run_case "y" "$yes_log"
+OS="$(uname -s)"
 
-assert_contains "brew install --cask 1password" "$yes_log"
-assert_contains "brew install --cask 1password-cli" "$yes_log"
-assert_contains "brew install chezmoi" "$yes_log"
-assert_contains "op signin" "$yes_log"
-assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
-assert_contains "brew bundle --file $home_dir/.local/share/chezmoi/Brewfile" "$yes_log"
-assert_contains "chezmoi apply" "$yes_log"
+if [ "$OS" = "Darwin" ]; then
+  cat >"$bin_dir/brew" <<'EOF'
+#!/bin/sh
+printf 'brew %s\n' "$*" >>"$TEST_LOG"
+EOF
+  chmod +x "$bin_dir/brew"
 
-no_log="$workdir/no.log"
-run_case "n" "$no_log"
+  yes_log="$workdir/yes.log"
+  run_case "y" "$yes_log"
 
-assert_contains "brew install --cask 1password" "$no_log"
-assert_contains "brew install --cask 1password-cli" "$no_log"
-assert_contains "brew install chezmoi" "$no_log"
-assert_not_contains "op signin" "$no_log"
-assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$no_log"
-assert_contains "brew bundle --file $home_dir/.local/share/chezmoi/Brewfile" "$no_log"
-assert_contains "chezmoi apply" "$no_log"
+  assert_contains "brew install --cask 1password" "$yes_log"
+  assert_contains "brew install --cask 1password-cli" "$yes_log"
+  assert_contains "brew install chezmoi" "$yes_log"
+  assert_contains "op signin" "$yes_log"
+  assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
+  assert_contains "brew bundle --file $home_dir/.local/share/chezmoi/Brewfile" "$yes_log"
+  assert_contains "chezmoi apply" "$yes_log"
+
+  no_log="$workdir/no.log"
+  run_case "n" "$no_log"
+
+  assert_contains "brew install --cask 1password" "$no_log"
+  assert_contains "brew install --cask 1password-cli" "$no_log"
+  assert_contains "brew install chezmoi" "$no_log"
+  assert_not_contains "op signin" "$no_log"
+  assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$no_log"
+  assert_contains "brew bundle --file $home_dir/.local/share/chezmoi/Brewfile" "$no_log"
+  assert_contains "chezmoi apply" "$no_log"
+
+elif [ "$OS" = "Linux" ]; then
+  cat >"$bin_dir/sudo" <<'EOF'
+#!/bin/sh
+printf 'sudo %s\n' "$*" >>"$TEST_LOG"
+EOF
+  chmod +x "$bin_dir/sudo"
+
+  yes_log="$workdir/yes.log"
+  run_case "y" "$yes_log"
+
+  assert_contains "sudo apt-get update -qq" "$yes_log"
+  assert_contains "sudo apt-get install -y curl git zsh build-essential" "$yes_log"
+  assert_contains "op signin" "$yes_log"
+  assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
+  assert_contains "chezmoi apply" "$yes_log"
+  assert_not_contains "brew install chezmoi" "$yes_log"
+
+  no_log="$workdir/no.log"
+  run_case "n" "$no_log"
+
+  assert_contains "sudo apt-get update -qq" "$no_log"
+  assert_contains "sudo apt-get install -y curl git zsh build-essential" "$no_log"
+  assert_not_contains "op signin" "$no_log"
+  assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$no_log"
+  assert_contains "chezmoi apply" "$no_log"
+  assert_not_contains "brew install chezmoi" "$no_log"
+
+else
+  echo "Unsupported OS for smoke test: $OS" >&2
+  exit 1
+fi
 
 echo "install.sh smoke test passed"

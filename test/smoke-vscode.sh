@@ -37,7 +37,11 @@ if ! grep -Fqx "code --install-extension enkia.tokyo-night --force" "$log_file";
 fi
 
 # settings.json was written and contains expected keys
-settings_file="$home_dir/Library/Application Support/Code/User/settings.json"
+case "$(uname -s)" in
+  Darwin) settings_file="$home_dir/Library/Application Support/Code/User/settings.json" ;;
+  Linux)  settings_file="$home_dir/.config/Code/User/settings.json" ;;
+  *)      echo "Unsupported OS" >&2; exit 1 ;;
+esac
 if [ ! -f "$settings_file" ]; then
   echo "settings.json was not written to $settings_file" >&2
   exit 1

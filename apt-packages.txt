@@ -1,0 +1,40 @@
+# Linux (Ubuntu / Raspberry Pi OS) package list
+# Equivalent to Brewfile for apt-based systems.
+# Installed by install.sh after chezmoi init.
+
+# Shell & core tools
+zsh
+git
+curl
+build-essential
+gnupg
+cloc
+pandoc
+telnet
+lynx
+
+# GitHub CLI (requires the github apt repo — see https://cli.github.com/manual/installation)
+gh
+
+# Modern ls replacement (Ubuntu 23.10+ / Debian 12+; on older systems install via cargo)
+eza
+
+# Go
+golang-go
+
+# Python (pyenv manages versions; these are its build deps)
+python3
+python3-pip
+python3-venv
+libssl-dev
+zlib1g-dev
+libbz2-dev
+libreadline-dev
+libsqlite3-dev
+libncursesw5-dev
+xz-utils
+tk-dev
+libxml2-dev
+libxmlsec1-dev
+libffi-dev
+liblzma-dev
