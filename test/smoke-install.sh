@@ -92,15 +92,36 @@ elif [ "$OS" = "Linux" ]; then
 #!/bin/sh
 printf 'sudo %s\n' "$*" >>"$TEST_LOG"
 EOF
-  chmod +x "$bin_dir/sudo"
+  cat >"$bin_dir/wget" <<'EOF'
+#!/bin/sh
+printf 'wget %s\n' "$*" >>"$TEST_LOG"
+EOF
+  cat >"$bin_dir/dpkg" <<'EOF'
+#!/bin/sh
+[ "$1" = "--print-architecture" ] && echo "amd64"
+printf 'dpkg %s\n' "$*" >>"$TEST_LOG"
+EOF
+  chmod +x "$bin_dir/sudo" "$bin_dir/wget" "$bin_dir/dpkg"
+
+  # Pre-populate apt-packages.txt so the bulk-install path is exercised
+  mkdir -p "$home_dir/.local/share/chezmoi"
+  printf 'gnupg\npandoc\n' > "$home_dir/.local/share/chezmoi/apt-packages.txt"
 
   yes_log="$workdir/yes.log"
   run_case "y" "$yes_log"
 
+  # op is not installed on Linux — should skip signin even when user answers y
   assert_contains "sudo apt-get update -qq" "$yes_log"
   assert_contains "sudo apt-get install -y curl git zsh build-essential" "$yes_log"
-  assert_contains "op signin" "$yes_log"
+  assert_not_contains "op signin" "$yes_log"
   assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
+  # bulk apt-get install from packages file
+  assert_contains "sudo apt-get install -y gnupg pandoc" "$yes_log"
+  # gh install via official apt repo
+  assert_contains "wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg" "$yes_log"
+  assert_contains "sudo apt-get install -y gh" "$yes_log"
+  # eza best-effort install
+  assert_contains "sudo apt-get install -y eza" "$yes_log"
   assert_contains "chezmoi apply" "$yes_log"
   assert_not_contains "brew install chezmoi" "$yes_log"
 
@@ -111,6 +132,8 @@ EOF
   assert_contains "sudo apt-get install -y curl git zsh build-essential" "$no_log"
   assert_not_contains "op signin" "$no_log"
   assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$no_log"
+  assert_contains "sudo apt-get install -y gnupg pandoc" "$no_log"
+  assert_contains "sudo apt-get install -y gh" "$no_log"
   assert_contains "chezmoi apply" "$no_log"
   assert_not_contains "brew install chezmoi" "$no_log"
 

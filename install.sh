@@ -8,6 +8,12 @@ _prompt_1password() {
   echo "1Password sign-in is only required if this machine needs access to the private NBC News Nexus NPM registry."
   echo "Skip it if you only need public npm packages."
   echo ""
+
+  if ! command -v op >/dev/null 2>&1; then
+    echo "1Password CLI (op) not found — skipping. To use private NPM packages later, install op and run: op signin && chezmoi apply"
+    return 0
+  fi
+
   printf 'Sign in to 1Password now? [y/N] '
   read -r sign_in_choice
 
@@ -16,6 +22,19 @@ _prompt_1password() {
   else
     echo "Skipping 1Password sign-in. ~/.npmrc will not be rendered; private Nexus packages will be unavailable."
   fi
+}
+
+_install_gh_linux() {
+  sudo mkdir -p -m 755 /etc/apt/keyrings
+  wget -qO- https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+    | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null
+  sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+  local arch
+  arch="$(dpkg --print-architecture 2>/dev/null || uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+  echo "deb [arch=${arch} signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+    | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+  sudo apt-get update -qq
+  sudo apt-get install -y gh
 }
 
 if [[ "$OS" == "Darwin" ]]; then
@@ -71,13 +90,22 @@ elif [[ "$OS" == "Linux" ]]; then
   # Pull and apply dotfiles (also runs run_once_before_* scripts, e.g. Oh My Zsh install)
   chezmoi init --apply https://github.com/ksarantakos/dotfiles
 
-  # Install apt packages listed in the repo
+  # Install packages listed in the repo (excludes gh and eza — handled below)
   apt_packages="$HOME/.local/share/chezmoi/apt-packages.txt"
   if [[ -f "$apt_packages" ]]; then
     echo "Installing apt packages..."
     # shellcheck disable=SC2046
     sudo apt-get install -y $(grep -v '^\s*#' "$apt_packages" | grep -v '^\s*$' | tr '\n' ' ')
   fi
+
+  # Install GitHub CLI via its official apt repository
+  if ! command -v gh >/dev/null 2>&1; then
+    echo "Installing GitHub CLI..."
+    _install_gh_linux || echo "Warning: could not install gh. See https://cli.github.com for manual install instructions."
+  fi
+
+  # Install eza if available on this distro (Ubuntu 24.04+ / Debian 12+; silently skipped otherwise)
+  sudo apt-get install -y eza 2>/dev/null || true
 
   # Re-apply so run_once_after_* scripts can run with all tools available
   chezmoi apply
