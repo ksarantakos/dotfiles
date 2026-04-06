@@ -49,8 +49,8 @@ echo "==> Verifying installed tools"
 
 fail=false
 
-# Required: must be present after bootstrap
-for cmd in git zsh curl; do
+# Required: must be present after bootstrap on all supported distros
+for cmd in git zsh curl gh; do
   if command -v "$cmd" > /dev/null 2>&1; then
     echo "  [OK]   $cmd  $(command -v "$cmd")"
   else
@@ -59,14 +59,12 @@ for cmd in git zsh curl; do
   fi
 done
 
-# Optional: available on newer distros only
-for cmd in gh eza; do
-  if command -v "$cmd" > /dev/null 2>&1; then
-    echo "  [OK]   $cmd  $(command -v "$cmd")"
-  else
-    echo "  [SKIP] $cmd — not available on this distro (expected on 22.04)"
-  fi
-done
+# Optional: best-effort install; only available on Ubuntu 24.04+ / Debian 12+
+if command -v eza > /dev/null 2>&1; then
+  echo "  [OK]   eza  $(command -v eza)"
+else
+  echo "  [SKIP] eza — not available on this distro"
+fi
 
 echo ""
 $fail && { echo "==> FAILED"; exit 1; } || true
