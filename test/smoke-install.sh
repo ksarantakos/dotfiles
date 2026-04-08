@@ -20,6 +20,8 @@ printf 'chezmoi %s\n' "$*" >>"$TEST_LOG"
 EOF
 
 chmod +x "$bin_dir/chezmoi"
+cp "$bin_dir/chezmoi" "$bin_with_gh_dir/chezmoi"
+chmod +x "$bin_with_gh_dir/chezmoi"
 
 assert_contains() {
   pattern=$1
