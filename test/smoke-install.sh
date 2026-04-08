@@ -8,6 +8,8 @@ trap 'rm -rf "$workdir"' EXIT
 
 bin_dir="$workdir/bin"
 mkdir -p "$bin_dir"
+bin_with_gh_dir="$workdir/bin-with-gh"
+mkdir -p "$bin_with_gh_dir"
 home_dir="$workdir/home"
 mkdir -p "$home_dir"
 
@@ -45,9 +47,10 @@ assert_not_contains() {
 run_case() {
   answer=$1
   log_file=$2
+  path_dir=${3:-$bin_dir}
 
   printf '%s\n' "$answer" |
-    env PATH="$bin_dir:$PATH" TEST_LOG="$log_file" HOME="$home_dir" \
+    env PATH="$path_dir:$PATH" TEST_LOG="$log_file" HOME="$home_dir" \
     bash "$repo_root/install.sh" >/dev/null
 }
 
@@ -101,13 +104,21 @@ EOF
 printf 'dpkg %s\n' "$*" >>"$TEST_LOG"
 EOF
   chmod +x "$bin_dir/sudo" "$bin_dir/curl" "$bin_dir/dpkg"
+  cp "$bin_dir/sudo" "$bin_with_gh_dir/sudo"
+  cp "$bin_dir/curl" "$bin_with_gh_dir/curl"
+  cp "$bin_dir/dpkg" "$bin_with_gh_dir/dpkg"
+  cat >"$bin_with_gh_dir/gh" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+  chmod +x "$bin_with_gh_dir/sudo" "$bin_with_gh_dir/curl" "$bin_with_gh_dir/dpkg" "$bin_with_gh_dir/gh"
 
   # Pre-populate apt-packages.txt so the bulk-install path is exercised
   mkdir -p "$home_dir/.local/share/chezmoi"
   printf 'gnupg\npandoc\n' > "$home_dir/.local/share/chezmoi/apt-packages.txt"
 
   yes_log="$workdir/yes.log"
-  run_case "y" "$yes_log"
+  run_case "y" "$yes_log" "$bin_dir"
 
   # op is not installed on Linux — should skip signin even when user answers y
   assert_contains "sudo apt-get update -qq" "$yes_log"
@@ -125,14 +136,16 @@ EOF
   assert_not_contains "brew install chezmoi" "$yes_log"
 
   no_log="$workdir/no.log"
-  run_case "n" "$no_log"
+  run_case "n" "$no_log" "$bin_with_gh_dir"
 
   assert_contains "sudo apt-get update -qq" "$no_log"
   assert_contains "sudo apt-get install -y curl git zsh build-essential" "$no_log"
   assert_not_contains "op signin" "$no_log"
   assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$no_log"
   assert_contains "sudo apt-get install -y gnupg pandoc" "$no_log"
-  assert_contains "sudo apt-get install -y gh" "$no_log"
+  assert_not_contains "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg" "$no_log"
+  assert_not_contains "sudo apt-get install -y gh" "$no_log"
+  assert_contains "sudo apt-get install -y eza" "$no_log"
   assert_contains "chezmoi apply" "$no_log"
   assert_not_contains "brew install chezmoi" "$no_log"
 
