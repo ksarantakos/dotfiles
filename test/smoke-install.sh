@@ -12,6 +12,7 @@ bin_with_gh_dir="$workdir/bin-with-gh"
 mkdir -p "$bin_with_gh_dir"
 home_dir="$workdir/home"
 mkdir -p "$home_dir"
+bash_env_file="$workdir/bash_env"
 
 cat >"$bin_dir/chezmoi" <<'EOF'
 #!/bin/sh
@@ -48,9 +49,22 @@ run_case() {
   answer=$1
   log_file=$2
   path_dir=${3:-$bin_dir}
+  gh_mode=${4:-default}
+
+  : >"$bash_env_file"
+  if [ "$gh_mode" = "absent" ]; then
+    cat >"$bash_env_file" <<'EOF'
+command() {
+  if [ "$1" = "-v" ] && [ "$2" = "gh" ]; then
+    return 1
+  fi
+  builtin command "$@"
+}
+EOF
+  fi
 
   printf '%s\n' "$answer" |
-    env PATH="$path_dir:$PATH" TEST_LOG="$log_file" HOME="$home_dir" \
+    env PATH="$path_dir:$PATH" TEST_LOG="$log_file" HOME="$home_dir" BASH_ENV="$bash_env_file" \
     bash "$repo_root/install.sh" >/dev/null
 }
 
@@ -118,7 +132,7 @@ EOF
   printf 'gnupg\npandoc\n' > "$home_dir/.local/share/chezmoi/apt-packages.txt"
 
   yes_log="$workdir/yes.log"
-  run_case "y" "$yes_log" "$bin_dir"
+  run_case "y" "$yes_log" "$bin_dir" "absent"
 
   # op is not installed on Linux — should skip signin even when user answers y
   assert_contains "sudo apt-get update -qq" "$yes_log"
@@ -136,7 +150,7 @@ EOF
   assert_not_contains "brew install chezmoi" "$yes_log"
 
   no_log="$workdir/no.log"
-  run_case "n" "$no_log" "$bin_with_gh_dir"
+  run_case "n" "$no_log" "$bin_with_gh_dir" "default"
 
   assert_contains "sudo apt-get update -qq" "$no_log"
   assert_contains "sudo apt-get install -y curl git zsh build-essential" "$no_log"
