@@ -135,31 +135,31 @@ EOF
   run_case "y" "$yes_log" "$bin_dir" "absent"
 
   # op is not installed on Linux — should skip signin even when user answers y
-  assert_contains "sudo apt-get update -qq" "$yes_log"
-  assert_contains "sudo apt-get install -y curl git zsh build-essential" "$yes_log"
+  assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get update -qq" "$yes_log"
+  assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y curl git zsh build-essential" "$yes_log"
   assert_not_contains "op signin" "$yes_log"
   assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
   # bulk apt-get install from packages file
-  assert_contains "sudo apt-get install -y gnupg pandoc" "$yes_log"
+  assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y gnupg pandoc" "$yes_log"
   # gh install via official apt repo
   assert_contains "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg" "$yes_log"
-  assert_contains "sudo apt-get install -y gh" "$yes_log"
+  assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y gh" "$yes_log"
   # eza best-effort install
-  assert_contains "sudo apt-get install -y eza" "$yes_log"
+  assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y eza" "$yes_log"
   assert_contains "chezmoi apply" "$yes_log"
   assert_not_contains "brew install chezmoi" "$yes_log"
 
   no_log="$workdir/no.log"
   run_case "n" "$no_log" "$bin_with_gh_dir" "default"
 
-  assert_contains "sudo apt-get update -qq" "$no_log"
-  assert_contains "sudo apt-get install -y curl git zsh build-essential" "$no_log"
+  assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get update -qq" "$no_log"
+  assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y curl git zsh build-essential" "$no_log"
   assert_not_contains "op signin" "$no_log"
   assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$no_log"
-  assert_contains "sudo apt-get install -y gnupg pandoc" "$no_log"
+  assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y gnupg pandoc" "$no_log"
   assert_not_contains "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg" "$no_log"
-  assert_not_contains "sudo apt-get install -y gh" "$no_log"
-  assert_contains "sudo apt-get install -y eza" "$no_log"
+  assert_not_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y gh" "$no_log"
+  assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y eza" "$no_log"
   assert_contains "chezmoi apply" "$no_log"
   assert_not_contains "brew install chezmoi" "$no_log"
 

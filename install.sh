@@ -3,6 +3,10 @@ set -e
 
 OS="$(uname -s)"
 
+_apt_get_linux() {
+  sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get "$@"
+}
+
 _prompt_1password() {
   echo ""
   echo "1Password sign-in is only required if this machine needs access to the private NBC News Nexus NPM registry."
@@ -33,8 +37,8 @@ _install_gh_linux() {
   arch="$(dpkg --print-architecture 2>/dev/null || uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
   echo "deb [arch=${arch} signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
     | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-  sudo apt-get update -qq
-  sudo apt-get install -y gh
+  _apt_get_linux update -qq
+  _apt_get_linux install -y gh
 }
 
 if [[ "$OS" == "Darwin" ]]; then
@@ -75,8 +79,8 @@ elif [[ "$OS" == "Linux" ]]; then
   # ── Linux (Ubuntu / Raspberry Pi OS) ──────────────────────────────────────
 
   echo "Installing base dependencies via apt..."
-  sudo apt-get update -qq
-  sudo apt-get install -y curl git zsh build-essential
+  _apt_get_linux update -qq
+  _apt_get_linux install -y curl git zsh build-essential
 
   # Install chezmoi if not present
   if ! command -v chezmoi >/dev/null 2>&1; then
@@ -95,7 +99,7 @@ elif [[ "$OS" == "Linux" ]]; then
   if [[ -f "$apt_packages" ]]; then
     echo "Installing apt packages..."
     # shellcheck disable=SC2046
-    sudo apt-get install -y $(grep -v '^\s*#' "$apt_packages" | grep -v '^\s*$' | tr '\n' ' ')
+    _apt_get_linux install -y $(grep -v '^\s*#' "$apt_packages" | grep -v '^\s*$' | tr '\n' ' ')
   fi
 
   # Install GitHub CLI via its official apt repository
@@ -105,7 +109,7 @@ elif [[ "$OS" == "Linux" ]]; then
   fi
 
   # Install eza if available on this distro (Ubuntu 24.04+ / Debian 12+; silently skipped otherwise)
-  sudo apt-get install -y eza 2>/dev/null || true
+  _apt_get_linux install -y eza 2>/dev/null || true
 
   # Re-apply so run_once_after_* scripts can run with all tools available
   chezmoi apply
