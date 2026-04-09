@@ -3,6 +3,12 @@ set -eu
 
 NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 
+# Existing npm prefix/globalconfig settings can break nvm activation on
+# machines that were previously configured with a system-wide npm install.
+# Keep this non-destructive: only clear process-local env vars and ignore the
+# user's npmrc while bootstrapping Node under nvm.
+unset NPM_CONFIG_PREFIX npm_config_prefix NPM_CONFIG_GLOBALCONFIG npm_config_globalconfig
+
 # Load nvm: try Homebrew (macOS), then ~/.nvm (Linux already-installed), then install via curl
 if command -v brew >/dev/null 2>&1 && [ -s "$(brew --prefix)/opt/nvm/nvm.sh" ]; then
   . "$(brew --prefix)/opt/nvm/nvm.sh"
@@ -17,5 +23,6 @@ else
   exit 0
 fi
 
-nvm install 24
+NPM_CONFIG_USERCONFIG=/dev/null nvm install 24
+NPM_CONFIG_USERCONFIG=/dev/null nvm use 24 >/dev/null
 nvm alias default 24
