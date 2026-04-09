@@ -15,7 +15,11 @@ fi
 code --install-extension enkia.tokyo-night --force
 
 # Merge vscode/settings.json and vscode/tokyo-night-v2.json into the VS Code user settings
-settings_dir="$HOME/Library/Application Support/Code/User"
+case "$(uname -s)" in
+  Darwin) settings_dir="$HOME/Library/Application Support/Code/User" ;;
+  Linux)  settings_dir="$HOME/.config/Code/User" ;;
+  *)      echo "Unsupported OS for VS Code settings" >&2; exit 1 ;;
+esac
 mkdir -p "$settings_dir"
 
 repo_dir="{{ .chezmoi.sourceDir }}"

@@ -1,5 +1,8 @@
 #!/bin/sh
 set -eu
 
+# iTerm2 configuration is macOS-only
+[ "$(uname -s)" = "Darwin" ] || exit 0
+
 defaults write com.googlecode.iterm2 PrefsCustomFolder -string "{{ .chezmoi.homeDir }}/.config/iterm2"
 defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool true
