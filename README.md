@@ -45,6 +45,14 @@ The script will:
 
 Open a new shell after it completes.
 
+On Linux, if your login shell is still not `zsh` after bootstrap, run:
+
+```sh
+chsh -s "$(which zsh)"
+```
+
+Then log out and back in so the shell change takes effect.
+
 If you skipped 1Password sign-in and later need access to the private NBC News Nexus NPM registry:
 
 ```sh
