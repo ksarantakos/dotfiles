@@ -10,7 +10,7 @@ elif [ -s "$NVM_DIR/nvm.sh" ]; then
   . "$NVM_DIR/nvm.sh"
 elif command -v curl >/dev/null 2>&1; then
   echo "Installing nvm via curl..."
-  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | sh
+  curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.2/install.sh | bash
   [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 else
   echo "nvm not found and curl unavailable, skipping Node install" >&2
