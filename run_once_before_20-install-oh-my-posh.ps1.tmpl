@@ -1,9 +1,38 @@
 {{- if eq .chezmoi.os "windows" -}}
-# Install Oh My Posh on Windows via winget
+# Install PowerShell tools on Windows
+
+# Oh My Posh
 if (-not (Get-Command oh-my-posh -ErrorAction SilentlyContinue)) {
     Write-Host "Installing Oh My Posh..."
     winget install JanDeDobbeleer.OhMyPosh -s winget --accept-package-agreements --accept-source-agreements
 } else {
-    Write-Host "Oh My Posh is already installed."
+    Write-Host "Oh My Posh already installed."
 }
+
+# Zoxide (smarter cd)
+if (-not (Get-Command zoxide -ErrorAction SilentlyContinue)) {
+    Write-Host "Installing zoxide..."
+    winget install ajeetdsouza.zoxide --accept-package-agreements --accept-source-agreements
+} else {
+    Write-Host "zoxide already installed."
+}
+
+# Delta (better git diff)
+if (-not (Get-Command delta -ErrorAction SilentlyContinue)) {
+    Write-Host "Installing delta..."
+    winget install dandavison.delta --accept-package-agreements --accept-source-agreements
+} else {
+    Write-Host "delta already installed."
+}
+
+# Terminal-Icons PowerShell module
+if (-not (Get-Module -ListAvailable -Name Terminal-Icons)) {
+    Write-Host "Installing Terminal-Icons..."
+    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope CurrentUser | Out-Null
+    Install-Module -Name Terminal-Icons -Repository PSGallery -Scope CurrentUser -Force
+} else {
+    Write-Host "Terminal-Icons already installed."
+}
+
+Write-Host "PowerShell tools setup complete!"
 {{- end -}}
