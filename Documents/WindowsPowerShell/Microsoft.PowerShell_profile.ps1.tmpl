@@ -1,0 +1,5 @@
+{{- if eq .chezmoi.os "windows" -}}
+# Oh My Posh - Tokyo Night theme
+$env:POSH_THEME = "{{ .chezmoi.homeDir }}/.config/oh-my-posh/tokyo-night-v2.omp.json"
+oh-my-posh init pwsh --config $env:POSH_THEME | Invoke-Expression
+{{- end -}}

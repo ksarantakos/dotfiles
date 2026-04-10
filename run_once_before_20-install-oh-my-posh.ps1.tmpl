@@ -1,0 +1,9 @@
+{{- if eq .chezmoi.os "windows" -}}
+# Install Oh My Posh on Windows via winget
+if (-not (Get-Command oh-my-posh -ErrorAction SilentlyContinue)) {
+    Write-Host "Installing Oh My Posh..."
+    winget install JanDeDobbeleer.OhMyPosh -s winget --accept-package-agreements --accept-source-agreements
+} else {
+    Write-Host "Oh My Posh is already installed."
+}
+{{- end -}}
