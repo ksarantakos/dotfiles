@@ -9,7 +9,15 @@ Import-Module Terminal-Icons
 # Zoxide - smarter cd command
 Invoke-Expression (& { (zoxide init powershell | Out-String) })
 
-# Aliases
+# Aliases - zoxide
 Set-Alias -Name z -Value __zoxide_z -Option AllScope -Scope Global -Force
 Set-Alias -Name zi -Value __zoxide_zi -Option AllScope -Scope Global -Force
+
+# Aliases - eza (modern ls)
+function ll { eza -lah --icons --group-directories-first @args }
+function la { eza -a --group-directories-first @args }
+function lt { eza --tree --level=2 --icons @args }
+
+# Aliases - bat (modern cat)
+Set-Alias -Name cat -Value bat -Option AllScope -Scope Global -Force
 {{- end -}}

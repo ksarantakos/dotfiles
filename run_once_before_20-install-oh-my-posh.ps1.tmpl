@@ -34,5 +34,21 @@ if (-not (Get-Module -ListAvailable -Name Terminal-Icons)) {
     Write-Host "Terminal-Icons already installed."
 }
 
+# eza (modern ls)
+if (-not (Get-Command eza -ErrorAction SilentlyContinue)) {
+    Write-Host "Installing eza..."
+    winget install eza-community.eza --accept-package-agreements --accept-source-agreements
+} else {
+    Write-Host "eza already installed."
+}
+
+# bat (modern cat)
+if (-not (Get-Command bat -ErrorAction SilentlyContinue)) {
+    Write-Host "Installing bat..."
+    winget install sharkdp.bat --accept-package-agreements --accept-source-agreements
+} else {
+    Write-Host "bat already installed."
+}
+
 Write-Host "PowerShell tools setup complete!"
 {{- end -}}
