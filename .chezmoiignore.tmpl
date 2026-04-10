@@ -7,4 +7,10 @@
 {{- /* Ignore macOS-only paths on Linux */ -}}
 {{- if ne .chezmoi.os "darwin" }}
 .config/iterm2
+{{- end }}
+
+{{- /* Ignore Windows-only paths on non-Windows */ -}}
+{{- if ne .chezmoi.os "windows" }}
+Documents/WindowsPowerShell
+Documents/PowerShell
 {{- end -}}

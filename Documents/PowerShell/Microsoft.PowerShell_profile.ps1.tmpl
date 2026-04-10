@@ -1,0 +1,15 @@
+{{- if eq .chezmoi.os "windows" -}}
+# Oh My Posh - Tokyo Night theme
+$env:POSH_THEME = "{{ .chezmoi.homeDir }}/.config/oh-my-posh/tokyo-night-v2.omp.json"
+oh-my-posh init pwsh --config $env:POSH_THEME | Invoke-Expression
+
+# Terminal-Icons - file/folder icons in terminal
+Import-Module Terminal-Icons
+
+# Zoxide - smarter cd command
+Invoke-Expression (& { (zoxide init powershell | Out-String) })
+
+# Aliases
+Set-Alias -Name z -Value __zoxide_z -Option AllScope -Scope Global -Force
+Set-Alias -Name zi -Value __zoxide_zi -Option AllScope -Scope Global -Force
+{{- end -}}
