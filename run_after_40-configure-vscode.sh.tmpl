@@ -1,8 +1,29 @@
 #!/bin/bash
 set -eu
 
-if ! command -v code >/dev/null 2>&1; then
-  echo "VS Code CLI (code) not found — install VS Code and re-run: chezmoi apply" >&2
+find_code() {
+  if command -v code >/dev/null 2>&1; then
+    command -v code
+    return 0
+  fi
+
+  local candidates_string="${VSCODE_CODE_CANDIDATES:-/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code:$HOME/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code}"
+  local candidate
+
+  IFS=: read -r -a candidates <<<"$candidates_string"
+  for candidate in "${candidates[@]}"; do
+    if [[ -x "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+code_cmd="$(find_code || true)"
+if [[ -z "$code_cmd" ]]; then
+  echo "VS Code CLI (code) not found — install VS Code or run 'Shell Command: Install code command in PATH', then re-run: chezmoi apply" >&2
   exit 0
 fi
 
@@ -12,7 +33,7 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 # Install Tokyo Night theme extension
-code --install-extension enkia.tokyo-night --force
+"$code_cmd" --install-extension enkia.tokyo-night --force
 
 # Merge vscode/settings.json and vscode/tokyo-night-v2.json into the VS Code user settings
 case "$(uname -s)" in

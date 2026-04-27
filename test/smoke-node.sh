@@ -27,7 +27,7 @@ EOF
 ln -s "$npmrc_target" "$home_dir/.npmrc"
 
 env HOME="$home_dir" XDG_CONFIG_HOME="$home_dir/.config" NVM_DIR="$nvm_dir" TEST_LOG="$log_file" PATH="/usr/bin:/bin" \
-  sh "$repo_root/run_once_after_30-install-node.sh"
+  sh "$repo_root/run_after_30-install-node.sh"
 
 if grep -Eq '^(prefix|globalconfig)=' "$home_dir/.npmrc"; then
   echo "Expected prefix/globalconfig to be removed from .npmrc" >&2

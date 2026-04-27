@@ -28,7 +28,7 @@ can still apply cleanly.
 | `~/.npmrc` | NPM registry config (token fetched from 1Password) |
 | `~/.yarnrc` | Yarn config |
 | `Brewfile` | Homebrew packages and casks tracked in the chezmoi source dir |
-| `run_once_after_*` | One-time setup hooks for tools that need post-apply configuration |
+| `run_before_*`, `run_after_*` | Idempotent setup hooks for tools that need pre/post-apply configuration |
 
 ## New laptop checklist
 

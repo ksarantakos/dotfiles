@@ -20,9 +20,9 @@ EOF
 chmod +x "$bin_dir/code"
 
 # Render the template manually (substitute chezmoi.sourceDir)
-rendered="$workdir/run_once_after_40-configure-vscode.sh"
+rendered="$workdir/run_after_40-configure-vscode.sh"
 sed "s|{{ .chezmoi.sourceDir }}|$repo_root|g" \
-  "$repo_root/run_once_after_40-configure-vscode.sh.tmpl" > "$rendered"
+  "$repo_root/run_after_40-configure-vscode.sh.tmpl" > "$rendered"
 
 # Run the rendered script
 env PATH="$bin_dir:$PATH" TEST_LOG="$log_file" HOME="$home_dir" \
@@ -78,7 +78,7 @@ ln -s "$python3_bin" "$no_code_bin/python3"
 
 no_code_stderr="$workdir/no-code.stderr"
 exit_code=0
-env PATH="$no_code_bin" TEST_LOG="/dev/null" HOME="$home_dir" \
+env PATH="$no_code_bin:/bin:/usr/bin" TEST_LOG="/dev/null" HOME="$home_dir" VSCODE_CODE_CANDIDATES="$workdir/missing-code" \
   "$bash_bin" "$rendered" >/dev/null 2>"$no_code_stderr" || exit_code=$?
 
 if [ "$exit_code" -ne 0 ]; then
@@ -88,6 +88,22 @@ fi
 if ! grep -q "not found" "$no_code_stderr"; then
   echo "Expected 'not found' message in stderr when code is missing" >&2
   cat "$no_code_stderr" >&2
+  exit 1
+fi
+
+# App-bundled code binary: Homebrew cask installs VS Code, but the shell symlink
+# may be missing until the user enables it from VS Code.
+app_code="$workdir/Visual Studio Code.app/Contents/Resources/app/bin/code"
+mkdir -p "$(dirname "$app_code")"
+cp "$bin_dir/code" "$app_code"
+app_log="$workdir/vscode-app.log"
+env PATH="$no_code_bin:/bin:/usr/bin" TEST_LOG="$app_log" HOME="$home_dir" VSCODE_CODE_CANDIDATES="$app_code" \
+  "$bash_bin" "$rendered" >/dev/null
+
+if ! grep -Fqx "code --install-extension enkia.tokyo-night --force" "$app_log"; then
+  echo "Expected app-bundled code binary to install the extension" >&2
+  echo "Captured log:" >&2
+  cat "$app_log" >&2
   exit 1
 fi
 

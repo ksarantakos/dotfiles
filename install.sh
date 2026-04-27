@@ -65,13 +65,13 @@ if [[ "$OS" == "Darwin" ]]; then
 
   _prompt_1password
 
-  # Pull and apply dotfiles (also runs run_once_before_* scripts, e.g. Oh My Zsh install)
+  # Pull and apply dotfiles (also runs run_before_* scripts, e.g. Oh My Zsh install)
   chezmoi init --apply https://github.com/ksarantakos/dotfiles
 
   # Install all Homebrew packages and casks
   brew bundle --file ~/.local/share/chezmoi/Brewfile
 
-  # Re-apply so run_once_after_* scripts can run with all tools available
+  # Re-apply so run_after_* scripts can run with all tools available
   # (installs Powerlevel10k, configures iTerm2 prefs folder)
   chezmoi apply
 
@@ -91,7 +91,7 @@ elif [[ "$OS" == "Linux" ]]; then
 
   _prompt_1password
 
-  # Pull and apply dotfiles (also runs run_once_before_* scripts, e.g. Oh My Zsh install)
+  # Pull and apply dotfiles (also runs run_before_* scripts, e.g. Oh My Zsh install)
   chezmoi init --apply https://github.com/ksarantakos/dotfiles
 
   # Install packages listed in the repo (excludes gh and eza — handled below)
@@ -111,7 +111,7 @@ elif [[ "$OS" == "Linux" ]]; then
   # Install eza if available on this distro (Ubuntu 24.04+ / Debian 12+; silently skipped otherwise)
   _apt_get_linux install -y eza 2>/dev/null || true
 
-  # Re-apply so run_once_after_* scripts can run with all tools available
+  # Re-apply so run_after_* scripts can run with all tools available
   chezmoi apply
 
   # Suggest setting zsh as default shell if it isn't already
