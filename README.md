@@ -22,6 +22,7 @@ can still apply cleanly.
 | `~/.gitconfig` | Git user config, SSH signing |
 | `~/.ssh/config` | SSH host config + 1Password agent |
 | `~/.config/iterm2/com.googlecode.iterm2.plist` | Full iTerm2 preferences loaded from a custom prefs folder |
+| `~/.config/iterm2/tokyo-night-v2-bg.png` | Tokyo Night v2 iTerm background image used by the default profile |
 | `~/.p10k.zsh` | Powerlevel10k prompt theme |
 | `~/.npmrc` | NPM registry config (token fetched from 1Password) |
 | `~/.yarnrc` | Yarn config |
