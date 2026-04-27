@@ -17,6 +17,9 @@ jobs:
       - name: smoke-install
         run: bash test/smoke-install.sh
 
+      - name: smoke-node
+        run: bash test/smoke-node.sh
+
       - name: smoke-vscode
         run: bash test/smoke-vscode.sh
 

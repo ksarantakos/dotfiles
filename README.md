@@ -45,6 +45,14 @@ The script will:
 
 Open a new shell after it completes.
 
+On Linux, if your login shell is still not `zsh` after bootstrap, run:
+
+```sh
+chsh -s "$(command -v zsh)"
+```
+
+Then log out and back in so the shell change takes effect.
+
 If you skipped 1Password sign-in and later need access to the private NBC News Nexus NPM registry:
 
 ```sh
@@ -138,6 +146,8 @@ brew bundle dump --force --file ~/.local/share/chezmoi/Brewfile
 
 ```sh
 ./test/smoke-install.sh
+./test/smoke-node.sh
+./test/smoke-vscode.sh
 ```
 
-This verifies the bootstrap script's command flow for both the sign-in and skip paths without touching the network or real Homebrew state.
+These verify the bootstrap command flow, Node/nvm npmrc handling, and VS Code setup without touching the network or real Homebrew state.
