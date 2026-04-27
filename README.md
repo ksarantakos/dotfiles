@@ -146,6 +146,8 @@ brew bundle dump --force --file ~/.local/share/chezmoi/Brewfile
 
 ```sh
 ./test/smoke-install.sh
+./test/smoke-node.sh
+./test/smoke-vscode.sh
 ```
 
-This verifies the bootstrap script's command flow for both the sign-in and skip paths without touching the network or real Homebrew state.
+These verify the bootstrap command flow, Node/nvm npmrc handling, and VS Code setup without touching the network or real Homebrew state.
