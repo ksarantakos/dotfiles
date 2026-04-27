@@ -21,7 +21,9 @@ can still apply cleanly.
 | `~/.zprofile` | Brew shellenv |
 | `~/.gitconfig` | Git user config, SSH signing |
 | `~/.ssh/config` | SSH host config + 1Password agent |
+| `~/.aws/config` | Safe AWS CLI SSO template; real SSO URL/account ID come from local chezmoi data |
 | `~/.config/iterm2/com.googlecode.iterm2.plist` | Full iTerm2 preferences loaded from a custom prefs folder |
+| `~/.config/iterm2/tokyo-night-v2-bg.png` | Tokyo Night v2 iTerm background image used by the default profile |
 | `~/.p10k.zsh` | Powerlevel10k prompt theme |
 | `~/.npmrc` | NPM registry config (token fetched from 1Password) |
 | `~/.yarnrc` | Yarn config |
@@ -40,7 +42,7 @@ The script will:
 2. Install chezmoi and the 1Password CLI
 3. Optionally sign in to 1Password (only needed for access to the private NBC News Nexus NPM registry)
 4. Pull and apply dotfiles (including Oh My Zsh install)
-5. Install all Homebrew packages and casks
+5. Install all Homebrew packages, casks, and fonts (including Meslo for Powerlevel10k)
 6. Re-apply so post-install hooks run (Powerlevel10k, iTerm2 prefs)
 
 Open a new shell after it completes.
@@ -97,6 +99,35 @@ Edit through chezmoi:
 chezmoi edit ~/.zshrc
 chezmoi apply
 ```
+
+## AWS SSO
+
+The repo includes a public-safe `~/.aws/config` template. It does not commit the
+real SSO start URL, AWS account ID, or 1Password item path. Store the sensitive
+metadata in 1Password, then add local chezmoi config with `op://` references:
+
+```toml
+[data.aws]
+  ssoStartURLRef = "op://<vault>/<item>/sso start url"
+  ssoAccountIDRef = "op://<vault>/<item>/account id"
+  ssoSession = "work"
+  ssoRoleName = "AWSPowerUserAccess"
+  profileName = "work-poweruser"
+  region = "us-east-1"
+  ssoRegion = "us-east-1"
+```
+
+Then run:
+
+```sh
+chezmoi apply ~/.aws/config
+aws sso login --profile work-poweruser
+```
+
+Generated AWS credentials and SSO cache directories are intentionally ignored.
+
+`region` is the default AWS service region for the profile. `ssoRegion` is the
+IAM Identity Center region and can differ.
 
 If you changed a live file directly, sync it back:
 
