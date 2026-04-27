@@ -1,0 +1,43 @@
+# AWS CLI SSO profile template.
+#
+# This repo is public, so the real SSO start URL, AWS account ID, and
+# 1Password item paths are not committed. To render an active profile on a
+# machine, store the values in 1Password and add local chezmoi data containing
+# op:// references:
+#
+#   [data.aws]
+#     ssoStartURLRef = "op://<vault>/<item>/sso start url"
+#     ssoAccountIDRef = "op://<vault>/<item>/account id"
+#     ssoSession = "work"
+#     ssoRoleName = "AWSPowerUserAccess"
+#     profileName = "work-poweruser"
+#     region = "us-east-1"
+#
+{{- $aws := index . "aws" | default dict -}}
+{{- $opAvailable := eq (trim (output "sh" (print .chezmoi.sourceDir "/.chezmoitemplates/op-available.sh"))) "yes" -}}
+{{- $ssoStartURLRef := index $aws "ssoStartURLRef" | default "" -}}
+{{- $ssoAccountIDRef := index $aws "ssoAccountIDRef" | default "" -}}
+{{- $ssoSession := index $aws "ssoSession" | default "work" -}}
+{{- $ssoRoleName := index $aws "ssoRoleName" | default "AWSPowerUserAccess" -}}
+{{- $profileName := index $aws "profileName" | default "work-poweruser" -}}
+{{- $region := index $aws "region" | default "us-east-1" -}}
+{{- if and $opAvailable $ssoStartURLRef $ssoAccountIDRef -}}
+{{- $ssoStartURL := onepasswordRead $ssoStartURLRef -}}
+{{- $ssoAccountID := onepasswordRead $ssoAccountIDRef }}
+[profile {{ $profileName }}]
+sso_session = {{ $ssoSession }}
+sso_account_id = {{ $ssoAccountID }}
+sso_role_name = {{ $ssoRoleName }}
+region = {{ $region }}
+output = json
+
+[sso-session {{ $ssoSession }}]
+sso_start_url = {{ $ssoStartURL }}
+sso_region = {{ $region }}
+sso_registration_scopes = sso:account:access
+{{- else }}
+# No AWS SSO profile rendered.
+# Store the SSO URL/account ID in 1Password, add local chezmoi data for
+# aws.ssoStartURLRef and aws.ssoAccountIDRef, then run:
+#   chezmoi apply ~/.aws/config
+{{- end }}
