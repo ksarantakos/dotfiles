@@ -2,9 +2,27 @@
 set -e
 
 OS="$(uname -s)"
+bootstrap_failed=0
 
 _apt_get_linux() {
   sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get "$@"
+}
+
+_load_homebrew() {
+  if command -v brew >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [[ -x /usr/local/bin/brew ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  fi
+}
+
+_mark_failed() {
+  bootstrap_failed=1
+  echo "Warning: $*" >&2
 }
 
 _prompt_1password() {
@@ -61,36 +79,43 @@ _init_or_update_chezmoi() {
 if [[ "$OS" == "Darwin" ]]; then
   # ── macOS ──────────────────────────────────────────────────────────────────
 
+  _load_homebrew
+
   # Install Homebrew if not present
   if ! command -v brew >/dev/null 2>&1; then
     echo "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    _load_homebrew
+  fi
 
-    # Add Homebrew to PATH for the rest of this script (Apple Silicon / Intel)
-    if [[ -f /opt/homebrew/bin/brew ]]; then
-      eval "$(/opt/homebrew/bin/brew shellenv)"
-    elif [[ -f /usr/local/bin/brew ]]; then
-      eval "$(/usr/local/bin/brew shellenv)"
-    fi
+  if ! command -v brew >/dev/null 2>&1; then
+    echo "Homebrew installation completed, but brew is still not on PATH." >&2
+    echo "Open a new shell or run: eval \"\$(/opt/homebrew/bin/brew shellenv)\"" >&2
+    exit 1
   fi
 
   # Install 1Password app, CLI, and chezmoi
   # 1Password app must be installed before the CLI so the SSH agent socket is available
-  brew install --cask 1password
-  brew install --cask 1password-cli
-  brew install chezmoi
+  brew install --cask 1password || _mark_failed "1Password app install failed"
+  brew install --cask 1password-cli || _mark_failed "1Password CLI install failed"
+  brew install chezmoi || _mark_failed "chezmoi install failed"
+
+  if ! command -v chezmoi >/dev/null 2>&1; then
+    echo "chezmoi is required to continue but is not available." >&2
+    exit 1
+  fi
 
   _prompt_1password
 
   # Pull/update and apply dotfiles (also runs run_before_* scripts, e.g. Oh My Zsh install)
-  _init_or_update_chezmoi
+  _init_or_update_chezmoi || exit 1
 
   # Install all Homebrew packages and casks
-  brew bundle --file ~/.local/share/chezmoi/Brewfile
+  brew bundle --file ~/.local/share/chezmoi/Brewfile || _mark_failed "brew bundle reported one or more failures"
 
   # Re-apply so run_after_* scripts can run with all tools available
   # (installs Powerlevel10k, configures iTerm2 prefs folder)
-  chezmoi apply
+  chezmoi apply || _mark_failed "final chezmoi apply failed"
 
 elif [[ "$OS" == "Linux" ]]; then
   # ── Linux (Ubuntu / Raspberry Pi OS) ──────────────────────────────────────
@@ -129,7 +154,7 @@ elif [[ "$OS" == "Linux" ]]; then
   _apt_get_linux install -y eza 2>/dev/null || true
 
   # Re-apply so run_after_* scripts can run with all tools available
-  chezmoi apply
+  chezmoi apply || _mark_failed "final chezmoi apply failed"
 
   # Suggest setting zsh as default shell if it isn't already
   if command -v zsh >/dev/null 2>&1 && [[ "$SHELL" != "$(command -v zsh)" ]]; then
@@ -144,4 +169,9 @@ else
 fi
 
 echo ""
+if [[ "$bootstrap_failed" -ne 0 ]]; then
+  echo "Bootstrap completed with warnings/failures above. Open a new shell, fix the reported items, then rerun this script."
+  exit 1
+fi
+
 echo "Done. Open a new shell to finish setup."
