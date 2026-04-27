@@ -41,6 +41,23 @@ _install_gh_linux() {
   _apt_get_linux install -y gh
 }
 
+_init_or_update_chezmoi() {
+  local repo_url="https://github.com/ksarantakos/dotfiles"
+  local source_dir
+
+  source_dir="$(chezmoi source-path 2>/dev/null || printf '%s/.local/share/chezmoi' "$HOME")"
+
+  if [[ -d "$source_dir/.git" ]]; then
+    echo "Updating existing chezmoi source at $source_dir..."
+    git -C "$source_dir" fetch origin master
+    git -C "$source_dir" checkout master
+    git -C "$source_dir" pull --ff-only origin master
+    chezmoi apply
+  else
+    chezmoi init --apply "$repo_url"
+  fi
+}
+
 if [[ "$OS" == "Darwin" ]]; then
   # ── macOS ──────────────────────────────────────────────────────────────────
 
@@ -65,8 +82,8 @@ if [[ "$OS" == "Darwin" ]]; then
 
   _prompt_1password
 
-  # Pull and apply dotfiles (also runs run_before_* scripts, e.g. Oh My Zsh install)
-  chezmoi init --apply https://github.com/ksarantakos/dotfiles
+  # Pull/update and apply dotfiles (also runs run_before_* scripts, e.g. Oh My Zsh install)
+  _init_or_update_chezmoi
 
   # Install all Homebrew packages and casks
   brew bundle --file ~/.local/share/chezmoi/Brewfile
@@ -91,8 +108,8 @@ elif [[ "$OS" == "Linux" ]]; then
 
   _prompt_1password
 
-  # Pull and apply dotfiles (also runs run_before_* scripts, e.g. Oh My Zsh install)
-  chezmoi init --apply https://github.com/ksarantakos/dotfiles
+  # Pull/update and apply dotfiles (also runs run_before_* scripts, e.g. Oh My Zsh install)
+  _init_or_update_chezmoi
 
   # Install packages listed in the repo (excludes gh and eza — handled below)
   apt_packages="$HOME/.local/share/chezmoi/apt-packages.txt"
