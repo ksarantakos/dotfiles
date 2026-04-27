@@ -30,6 +30,32 @@ can still apply cleanly.
 | `Brewfile` | Homebrew packages and casks tracked in the chezmoi source dir |
 | `run_once_after_*` | One-time setup hooks for tools that need post-apply configuration |
 
+## New laptop checklist
+
+Before starting:
+
+- Update macOS from System Settings.
+- Confirm you can sign in to 1Password from the web or another trusted device.
+- Keep your 1Password Emergency Kit / Secret Key available.
+- Make sure this repository's `master` branch is current.
+
+Bootstrap:
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ksarantakos/dotfiles/master/install.sh)"
+```
+
+After bootstrap:
+
+```sh
+~/.local/share/chezmoi/test/local-doctor.sh
+op whoami
+aws sso login --profile work-poweruser
+aws sts get-caller-identity
+```
+
+Open a new shell after bootstrap so zsh, Powerlevel10k, nvm, and Homebrew paths are loaded from the rendered dotfiles.
+
 ## Bootstrap a new machine
 
 ```sh
@@ -44,6 +70,7 @@ The script will:
 4. Pull and apply dotfiles (including Oh My Zsh install)
 5. Install all Homebrew packages, casks, and fonts (including Meslo for Powerlevel10k)
 6. Re-apply so post-install hooks run (Powerlevel10k, iTerm2 prefs)
+7. Apply macOS defaults for keyboard repeat, trackpad tap-to-click, Finder, screenshots, and Dock autohide
 
 Open a new shell after it completes.
 
@@ -129,6 +156,41 @@ Generated AWS credentials and SSO cache directories are intentionally ignored.
 `region` is the default AWS service region for the profile. `ssoRegion` is the
 IAM Identity Center region and can differ.
 
+`profileName` also controls the default `AWS_PROFILE` rendered into `~/.zshrc`.
+If no local value is configured, zsh defaults to `work-poweruser`.
+
+To create the 1Password item from a working machine, use fields like:
+
+```sh
+op item create --category="API Credential" --title="AWS SSO" \
+  "sso start url[text]=https://example.com/start" \
+  "account id[text]=123456789012"
+```
+
+Then set `ssoStartURLRef` and `ssoAccountIDRef` to the resulting `op://` references.
+
+## SSH and Git Signing
+
+Git commit signing is configured to use SSH keys through the 1Password SSH agent.
+On a new machine:
+
+- Sign in to the 1Password app.
+- Enable the 1Password SSH agent.
+- Confirm the public signing key is available at `~/.ssh/id_ed25519.pub` or update local git config data before applying.
+- Verify GitHub recognizes signed commits after your first test commit.
+
+## Homebrew Notes
+
+Fresh macOS machines install GUI apps through Homebrew casks, including 1Password,
+iTerm2, Visual Studio Code, Warp, Docker Desktop, and the Meslo Powerlevel10k font.
+
+On an existing machine, those apps might already exist in `/Applications` without
+being Homebrew-owned. That is fine for day-to-day use, but `brew bundle check`
+can report them as missing until Homebrew owns or reinstalls those casks.
+
+Docker CLI and Docker Desktop are both tracked. The CLI alone is not enough for
+Docker-based tests; Docker Desktop must be running.
+
 If you changed a live file directly, sync it back:
 
 ```sh
@@ -176,9 +238,10 @@ brew bundle dump --force --file ~/.local/share/chezmoi/Brewfile
 ## Smoke test
 
 ```sh
+./test/local-doctor.sh
 ./test/smoke-install.sh
 ./test/smoke-node.sh
 ./test/smoke-vscode.sh
 ```
 
-These verify the bootstrap command flow, Node/nvm npmrc handling, and VS Code setup without touching the network or real Homebrew state.
+`local-doctor.sh` checks the current machine after bootstrap. The smoke tests verify the bootstrap command flow, Node/nvm npmrc handling, and VS Code setup without touching the network or real Homebrew state.

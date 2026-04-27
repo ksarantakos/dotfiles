@@ -135,7 +135,9 @@ if command -v pyenv 1>/dev/null 2>&1; then
 fi
 export PATH="$HOME/.local/bin:$PATH"
 
+{{- $aws := index . "aws" | default dict -}}
+{{- $awsProfileName := index $aws "profileName" | default "work-poweruser" }}
 # Default AWS SSO profile. Credentials still come from `aws sso login`.
-export AWS_PROFILE="${AWS_PROFILE-work-poweruser}"
+export AWS_PROFILE="${AWS_PROFILE-{{ $awsProfileName }}}"
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
