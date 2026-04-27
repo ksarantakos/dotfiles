@@ -136,6 +136,6 @@ fi
 export PATH="$HOME/.local/bin:$PATH"
 
 # Default AWS SSO profile. Credentials still come from `aws sso login`.
-export AWS_PROFILE="${AWS_PROFILE:-work-poweruser}"
+export AWS_PROFILE="${AWS_PROFILE-work-poweruser}"
 
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
