@@ -191,6 +191,10 @@ can report them as missing until Homebrew owns or reinstalls those casks.
 Docker CLI and Docker Desktop are both tracked. The CLI alone is not enough for
 Docker-based tests; Docker Desktop must be running.
 
+Old versioned Python runtimes should be managed through `pyenv` rather than
+Homebrew. Homebrew can remove deprecated formulae from the public tap; for
+example, `python@3.8` was no longer available on April 27, 2026.
+
 If you changed a live file directly, sync it back:
 
 ```sh
