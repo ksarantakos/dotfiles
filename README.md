@@ -50,7 +50,7 @@ After bootstrap:
 ```sh
 ~/.local/share/chezmoi/test/local-doctor.sh
 op whoami
-aws sso login --profile work-poweruser
+aws sso login --profile "${AWS_PROFILE:-work-poweruser}"
 aws sts get-caller-identity
 ```
 

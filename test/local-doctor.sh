@@ -3,6 +3,7 @@ set -eu
 
 failures=0
 warnings=0
+os_name=$(uname -s)
 
 ok() {
   printf '[OK]   %s\n' "$1"
@@ -30,6 +31,14 @@ require_command() {
   fi
 }
 
+check_command() {
+  if have_command "$1"; then
+    ok "$1: $(command -v "$1")"
+  else
+    warn "$1 not found"
+  fi
+}
+
 run_with_timeout() {
   timeout_seconds=$1
   shift
@@ -43,10 +52,22 @@ run_with_timeout() {
   fi
 }
 
+meslo_font_installed() {
+  [ -f "$HOME/Library/Fonts/MesloLGS NF Regular.ttf" ] ||
+    [ -f "/Library/Fonts/MesloLGS NF Regular.ttf" ] ||
+    [ -f "/System/Library/Fonts/MesloLGS NF Regular.ttf" ]
+}
+
 echo "==> Required commands"
-for cmd in brew chezmoi git zsh op aws node; do
+for cmd in chezmoi git zsh aws node; do
   require_command "$cmd"
 done
+
+if [ "$os_name" = "Darwin" ]; then
+  require_command brew
+else
+  check_command brew
+fi
 
 if have_command code; then
   ok "code: $(command -v code)"
@@ -74,7 +95,9 @@ else
   fail "~/.p10k.zsh is missing"
 fi
 
-if find "$HOME/Library/Fonts" /Library/Fonts -maxdepth 1 -name 'MesloLGS NF Regular.ttf' 2>/dev/null | grep -q .; then
+if [ "$os_name" != "Darwin" ]; then
+  warn "MesloLGS NF font check skipped on $os_name"
+elif meslo_font_installed; then
   ok "MesloLGS NF font is installed"
 else
   warn "MesloLGS NF font not found; run brew bundle to install font-meslo-for-powerlevel10k"
@@ -82,7 +105,9 @@ fi
 
 echo ""
 echo "==> 1Password"
-if run_with_timeout 5 op whoami >/dev/null 2>&1; then
+if ! have_command op; then
+  warn "op not found; install 1Password CLI or run brew bundle"
+elif run_with_timeout 5 op whoami >/dev/null 2>&1; then
   ok "1Password CLI is authenticated"
 else
   warn "1Password CLI is not authenticated or desktop integration is unavailable"
@@ -104,7 +129,7 @@ fi
 
 echo ""
 echo "==> macOS apps"
-if [ "$(uname -s)" = "Darwin" ]; then
+if [ "$os_name" = "Darwin" ]; then
   for app in "1Password" "iTerm" "Visual Studio Code" "Warp" "Docker"; do
     if [ -d "/Applications/$app.app" ]; then
       ok "$app.app installed"
