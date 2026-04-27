@@ -48,7 +48,7 @@ Open a new shell after it completes.
 On Linux, if your login shell is still not `zsh` after bootstrap, run:
 
 ```sh
-chsh -s "$(which zsh)"
+chsh -s "$(command -v zsh)"
 ```
 
 Then log out and back in so the shell change takes effect.

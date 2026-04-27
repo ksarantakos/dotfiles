@@ -9,6 +9,7 @@ trap 'rm -rf "$workdir"' EXIT
 home_dir="$workdir/home"
 nvm_dir="$workdir/nvm"
 log_file="$workdir/nvm.log"
+npmrc_target="$workdir/npmrc-target"
 mkdir -p "$home_dir" "$nvm_dir"
 
 cat >"$nvm_dir/nvm.sh" <<'EOF'
@@ -17,12 +18,13 @@ nvm() {
 }
 EOF
 
-cat >"$home_dir/.npmrc" <<'EOF'
+cat >"$npmrc_target" <<'EOF'
 registry=https://registry.npmjs.org/
 prefix=/usr/local
 //registry.npmjs.org/:_authToken=token
 globalconfig=/etc/npmrc
 EOF
+ln -s "$npmrc_target" "$home_dir/.npmrc"
 
 env HOME="$home_dir" XDG_CONFIG_HOME="$home_dir/.config" NVM_DIR="$nvm_dir" TEST_LOG="$log_file" PATH="/usr/bin:/bin" \
   sh "$repo_root/run_once_after_30-install-node.sh"
@@ -30,6 +32,11 @@ env HOME="$home_dir" XDG_CONFIG_HOME="$home_dir/.config" NVM_DIR="$nvm_dir" TEST
 if grep -Eq '^(prefix|globalconfig)=' "$home_dir/.npmrc"; then
   echo "Expected prefix/globalconfig to be removed from .npmrc" >&2
   cat "$home_dir/.npmrc" >&2
+  exit 1
+fi
+
+if [ ! -L "$home_dir/.npmrc" ]; then
+  echo "Expected .npmrc symlink to be preserved" >&2
   exit 1
 fi
 

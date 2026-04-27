@@ -8,7 +8,7 @@ NPMRC_PATH="$HOME/.npmrc"
 # Existing npm prefix/globalconfig settings can break nvm activation on
 # machines that were previously configured with a system-wide npm install.
 # Keep this non-destructive: clear process-local env vars and, if needed,
-# back up only the conflicting keys from the user's npmrc before bootstrapping
+# back up the user's npmrc before removing conflicting keys and bootstrapping
 # Node under nvm.
 unset NPM_CONFIG_PREFIX npm_config_prefix NPM_CONFIG_GLOBALCONFIG npm_config_globalconfig
 
@@ -26,9 +26,10 @@ sanitize_npmrc_for_nvm() {
     cp "$NPMRC_PATH" "$backup_path"
   fi
 
-  tmp_path="$(mktemp)"
+  tmp_path="$(mktemp "${TMPDIR:-/tmp}/npmrc.nvm.XXXXXX")"
   grep -Ev '^(prefix|globalconfig)=' "$NPMRC_PATH" >"$tmp_path" || true
-  mv "$tmp_path" "$NPMRC_PATH"
+  cat "$tmp_path" >"$NPMRC_PATH"
+  rm -f "$tmp_path"
 }
 
 # Load nvm: try Homebrew (macOS), then ~/.nvm (Linux already-installed), then install via curl
