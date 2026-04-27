@@ -195,6 +195,9 @@ Old versioned Python runtimes should be managed through `pyenv` rather than
 Homebrew. Homebrew can remove deprecated formulae from the public tap; for
 example, `python@3.8` was no longer available on April 27, 2026.
 
+Tools with Xcode-only build requirements, such as SwiftLint, should be installed
+separately after full Xcode is available.
+
 If you changed a live file directly, sync it back:
 
 ```sh
