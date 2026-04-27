@@ -40,7 +40,7 @@ The script will:
 2. Install chezmoi and the 1Password CLI
 3. Optionally sign in to 1Password (only needed for access to the private NBC News Nexus NPM registry)
 4. Pull and apply dotfiles (including Oh My Zsh install)
-5. Install all Homebrew packages and casks
+5. Install all Homebrew packages, casks, and fonts (including Meslo for Powerlevel10k)
 6. Re-apply so post-install hooks run (Powerlevel10k, iTerm2 prefs)
 
 Open a new shell after it completes.

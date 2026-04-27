@@ -1389,7 +1389,7 @@
 				<real>0.10196078568696976</real>
 			</dict>
 			<key>Background Image Location</key>
-			<string>/Users/a206547942/src/iTerm2-Tokyo-Night-Color-Theme/tokyo-night-bg.png</string>
+			<string>/Users/a206547942/src/iTerm2-Tokyo-Night-Color-Theme/tokyo-night-v2-bg.png</string>
 			<key>Badge Color</key>
 			<dict>
 				<key>Alpha Component</key>
@@ -1404,7 +1404,7 @@
 				<real>1</real>
 			</dict>
 			<key>Blend</key>
-			<real>0.71096601277372262</real>
+			<real>0.3465978558394161</real>
 			<key>Blink Allowed</key>
 			<true/>
 			<key>Blinking Cursor</key>
@@ -1632,6 +1632,8 @@
 			<true/>
 			<key>Use Non-ASCII Font</key>
 			<false/>
+			<key>Use Tab Color</key>
+			<true/>
 			<key>Vertical Spacing</key>
 			<real>1</real>
 			<key>Visual Bell</key>
@@ -2632,7 +2634,7 @@
 	<key>SoundForEsc</key>
 	<false/>
 	<key>TabStyleWithAutomaticOption</key>
-	<integer>1</integer>
+	<integer>5</integer>
 	<key>UseBorder</key>
 	<false/>
 	<key>VisualIndicatorForEsc</key>
