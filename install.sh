@@ -43,18 +43,18 @@ _install_gh_linux() {
 
 _init_or_update_chezmoi() {
   local repo_url="https://github.com/ksarantakos/dotfiles"
+  local dotfiles_ref="${DOTFILES_REF:-master}"
   local source_dir
 
   source_dir="$(chezmoi source-path 2>/dev/null || printf '%s/.local/share/chezmoi' "$HOME")"
 
   if [[ -d "$source_dir/.git" ]]; then
-    echo "Updating existing chezmoi source at $source_dir..."
-    git -C "$source_dir" fetch origin master
-    git -C "$source_dir" checkout master
-    git -C "$source_dir" pull --ff-only origin master
+    echo "Updating existing chezmoi source at $source_dir to $dotfiles_ref..."
+    git -C "$source_dir" fetch origin "$dotfiles_ref"
+    git -C "$source_dir" checkout -B "$dotfiles_ref" FETCH_HEAD
     chezmoi apply
   else
-    chezmoi init --apply "$repo_url"
+    chezmoi init --branch "$dotfiles_ref" --apply "$repo_url"
   fi
 }
 

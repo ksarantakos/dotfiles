@@ -90,7 +90,7 @@ EOF
   assert_contains "brew install --cask 1password-cli" "$yes_log"
   assert_contains "brew install chezmoi" "$yes_log"
   assert_contains "op signin" "$yes_log"
-  assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
+  assert_contains "chezmoi init --branch master --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
   assert_contains "brew bundle --file $home_dir/.local/share/chezmoi/Brewfile" "$yes_log"
   assert_contains "chezmoi apply" "$yes_log"
 
@@ -101,7 +101,7 @@ EOF
   assert_contains "brew install --cask 1password-cli" "$no_log"
   assert_contains "brew install chezmoi" "$no_log"
   assert_not_contains "op signin" "$no_log"
-  assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$no_log"
+  assert_contains "chezmoi init --branch master --apply https://github.com/ksarantakos/dotfiles" "$no_log"
   assert_contains "brew bundle --file $home_dir/.local/share/chezmoi/Brewfile" "$no_log"
   assert_contains "chezmoi apply" "$no_log"
 
@@ -140,7 +140,7 @@ EOF
   assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get update -qq" "$yes_log"
   assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y curl git zsh build-essential" "$yes_log"
   assert_not_contains "op signin" "$yes_log"
-  assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
+  assert_contains "chezmoi init --branch master --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
   # bulk apt-get install from packages file
   assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y gnupg pandoc" "$yes_log"
   # gh install via official apt repo
@@ -157,7 +157,7 @@ EOF
   assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get update -qq" "$no_log"
   assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y curl git zsh build-essential" "$no_log"
   assert_not_contains "op signin" "$no_log"
-  assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$no_log"
+  assert_contains "chezmoi init --branch master --apply https://github.com/ksarantakos/dotfiles" "$no_log"
   assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y gnupg pandoc" "$no_log"
   assert_not_contains "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg" "$no_log"
   assert_not_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y gh" "$no_log"
