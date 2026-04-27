@@ -12,6 +12,7 @@
 #     ssoRoleName = "AWSPowerUserAccess"
 #     profileName = "work-poweruser"
 #     region = "us-east-1"
+#     ssoRegion = "us-east-1"
 #
 {{- $aws := index . "aws" | default dict -}}
 {{- $opAvailable := eq (trim (output "sh" (print .chezmoi.sourceDir "/.chezmoitemplates/op-available.sh"))) "yes" -}}
@@ -21,6 +22,7 @@
 {{- $ssoRoleName := index $aws "ssoRoleName" | default "AWSPowerUserAccess" -}}
 {{- $profileName := index $aws "profileName" | default "work-poweruser" -}}
 {{- $region := index $aws "region" | default "us-east-1" -}}
+{{- $ssoRegion := index $aws "ssoRegion" | default "us-east-1" -}}
 {{- if and $opAvailable $ssoStartURLRef $ssoAccountIDRef -}}
 {{- $ssoStartURL := onepasswordRead $ssoStartURLRef -}}
 {{- $ssoAccountID := onepasswordRead $ssoAccountIDRef }}
@@ -33,7 +35,7 @@ output = json
 
 [sso-session {{ $ssoSession }}]
 sso_start_url = {{ $ssoStartURL }}
-sso_region = {{ $region }}
+sso_region = {{ $ssoRegion }}
 sso_registration_scopes = sso:account:access
 {{- else }}
 # No AWS SSO profile rendered.

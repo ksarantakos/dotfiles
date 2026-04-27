@@ -114,6 +114,7 @@ metadata in 1Password, then add local chezmoi config with `op://` references:
   ssoRoleName = "AWSPowerUserAccess"
   profileName = "work-poweruser"
   region = "us-east-1"
+  ssoRegion = "us-east-1"
 ```
 
 Then run:
@@ -124,6 +125,9 @@ aws sso login --profile work-poweruser
 ```
 
 Generated AWS credentials and SSO cache directories are intentionally ignored.
+
+`region` is the default AWS service region for the profile. `ssoRegion` is the
+IAM Identity Center region and can differ.
 
 If you changed a live file directly, sync it back:
 

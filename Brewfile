@@ -37,6 +37,7 @@ cask "1password-cli"
 cask "basictex"
 cask "codex"
 cask "copilot-cli"
+cask "docker-desktop"
 cask "font-meslo-for-powerlevel10k"
 # Keep both terminal emulators installed intentionally.
 cask "iterm2"
