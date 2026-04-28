@@ -46,6 +46,119 @@ _prompt_1password() {
   fi
 }
 
+_configure_aws_sso() {
+  local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/chezmoi"
+  local config_file="$config_dir/chezmoi.toml"
+  local profile_name="${AWS_PROFILE:-work-poweruser}"
+  local sso_start_url_ref
+  local sso_account_id_ref
+  local sso_session
+  local sso_role_name
+  local region
+  local sso_region
+
+  if ! command -v aws >/dev/null 2>&1; then
+    echo "AWS CLI is not installed yet; skipping AWS SSO profile check."
+    return 0
+  fi
+
+  if aws configure list-profiles 2>/dev/null | grep -qx "$profile_name"; then
+    echo "AWS profile already exists: $profile_name"
+    return 0
+  fi
+
+  echo ""
+  echo "AWS profile '$profile_name' was not found."
+  echo "This repo keeps the SSO start URL and AWS account ID out of git."
+  echo "If those values are in 1Password, the script can store local op:// refs in chezmoi config and render ~/.aws/config."
+  echo ""
+
+  if ! command -v op >/dev/null 2>&1; then
+    _mark_failed "1Password CLI is unavailable; cannot configure AWS SSO profile '$profile_name'"
+    return 0
+  fi
+
+  if ! op whoami >/dev/null 2>&1; then
+    echo "1Password CLI is not authenticated."
+    printf 'Sign in to 1Password now to configure AWS SSO? [y/N] '
+    read -r aws_op_choice
+    if [[ "$aws_op_choice" =~ ^[Yy]$ ]]; then
+      op signin || {
+        _mark_failed "1Password sign-in failed; AWS SSO profile '$profile_name' was not configured"
+        return 0
+      }
+    else
+      _mark_failed "AWS SSO profile '$profile_name' was not configured"
+      return 0
+    fi
+  fi
+
+  printf 'Configure AWS SSO profile %s now? [y/N] ' "$profile_name"
+  read -r aws_config_choice
+  if [[ ! "$aws_config_choice" =~ ^[Yy]$ ]]; then
+    _mark_failed "AWS SSO profile '$profile_name' was not configured"
+    return 0
+  fi
+
+  printf '1Password ref for SSO start URL: '
+  read -r sso_start_url_ref
+  printf '1Password ref for AWS account ID: '
+  read -r sso_account_id_ref
+  printf 'AWS profile name [%s]: ' "$profile_name"
+  read -r profile_name_input
+  profile_name="${profile_name_input:-$profile_name}"
+  printf 'AWS SSO session name [work]: '
+  read -r sso_session
+  sso_session="${sso_session:-work}"
+  printf 'AWS SSO role name [AWSPowerUserAccess]: '
+  read -r sso_role_name
+  sso_role_name="${sso_role_name:-AWSPowerUserAccess}"
+  printf 'AWS default region [us-east-1]: '
+  read -r region
+  region="${region:-us-east-1}"
+  printf 'AWS SSO region [us-east-1]: '
+  read -r sso_region
+  sso_region="${sso_region:-us-east-1}"
+
+  if [[ -z "$sso_start_url_ref" || -z "$sso_account_id_ref" ]]; then
+    _mark_failed "AWS SSO 1Password refs were not provided"
+    return 0
+  fi
+
+  mkdir -p "$config_dir"
+  if [[ -f "$config_file" && ! -f "$config_file.before-aws-sso" ]]; then
+    cp "$config_file" "$config_file.before-aws-sso"
+  fi
+
+  if [[ -f "$config_file" ]] && grep -q '^\[data\.aws\]' "$config_file"; then
+    echo "Updating existing [data.aws] in $config_file is not automated yet." >&2
+    echo "Edit that block if the refs are wrong, then rerun this script." >&2
+  else
+    cat >>"$config_file" <<EOF
+
+[data.aws]
+  ssoStartURLRef = "$sso_start_url_ref"
+  ssoAccountIDRef = "$sso_account_id_ref"
+  ssoSession = "$sso_session"
+  ssoRoleName = "$sso_role_name"
+  profileName = "$profile_name"
+  region = "$region"
+  ssoRegion = "$sso_region"
+EOF
+  fi
+
+  chezmoi apply ~/.aws/config || {
+    _mark_failed "failed to render ~/.aws/config"
+    return 0
+  }
+
+  if aws configure list-profiles 2>/dev/null | grep -qx "$profile_name"; then
+    echo "AWS profile configured: $profile_name"
+  else
+    _mark_failed "AWS profile '$profile_name' still was not found after rendering ~/.aws/config"
+  fi
+}
+
 _install_gh_linux() {
   sudo mkdir -p -m 755 /etc/apt/keyrings
   curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
@@ -116,6 +229,7 @@ if [[ "$OS" == "Darwin" ]]; then
   # Re-apply so run_after_* scripts can run with all tools available
   # (installs Powerlevel10k, configures iTerm2 prefs folder)
   chezmoi apply || _mark_failed "final chezmoi apply failed"
+  _configure_aws_sso
 
 elif [[ "$OS" == "Linux" ]]; then
   # ── Linux (Ubuntu / Raspberry Pi OS) ──────────────────────────────────────
@@ -155,6 +269,7 @@ elif [[ "$OS" == "Linux" ]]; then
 
   # Re-apply so run_after_* scripts can run with all tools available
   chezmoi apply || _mark_failed "final chezmoi apply failed"
+  _configure_aws_sso
 
   # Suggest setting zsh as default shell if it isn't already
   if command -v zsh >/dev/null 2>&1 && [[ "$SHELL" != "$(command -v zsh)" ]]; then

@@ -81,7 +81,14 @@ EOF
 #!/bin/sh
 printf 'op %s\n' "$*" >>"$TEST_LOG"
 EOF
-  chmod +x "$bin_dir/brew" "$bin_dir/op"
+  cat >"$bin_dir/aws" <<'EOF'
+#!/bin/sh
+printf 'aws %s\n' "$*" >>"$TEST_LOG"
+if [ "$1" = "configure" ] && [ "$2" = "list-profiles" ]; then
+  echo "work-poweruser"
+fi
+EOF
+  chmod +x "$bin_dir/brew" "$bin_dir/op" "$bin_dir/aws"
 
   yes_log="$workdir/yes.log"
   run_case "y" "$yes_log"
@@ -119,10 +126,18 @@ EOF
 [ "$1" = "--print-architecture" ] && echo "amd64"
 printf 'dpkg %s\n' "$*" >>"$TEST_LOG"
 EOF
-  chmod +x "$bin_dir/sudo" "$bin_dir/curl" "$bin_dir/dpkg"
+  cat >"$bin_dir/aws" <<'EOF'
+#!/bin/sh
+printf 'aws %s\n' "$*" >>"$TEST_LOG"
+if [ "$1" = "configure" ] && [ "$2" = "list-profiles" ]; then
+  echo "work-poweruser"
+fi
+EOF
+  chmod +x "$bin_dir/sudo" "$bin_dir/curl" "$bin_dir/dpkg" "$bin_dir/aws"
   cp "$bin_dir/sudo" "$bin_with_gh_dir/sudo"
   cp "$bin_dir/curl" "$bin_with_gh_dir/curl"
   cp "$bin_dir/dpkg" "$bin_with_gh_dir/dpkg"
+  cp "$bin_dir/aws" "$bin_with_gh_dir/aws"
   cat >"$bin_with_gh_dir/gh" <<'EOF'
 #!/bin/sh
 exit 0
