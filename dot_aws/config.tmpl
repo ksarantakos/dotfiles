@@ -23,7 +23,9 @@
 {{- $profileName := index $aws "profileName" | default "work-poweruser" -}}
 {{- $region := index $aws "region" | default "us-east-1" -}}
 {{- $ssoRegion := index $aws "ssoRegion" | default "us-east-1" -}}
-{{- if and $opAvailable $ssoStartURLRef $ssoAccountIDRef -}}
+{{- $ssoStartURLRefValid := hasPrefix "op://" $ssoStartURLRef -}}
+{{- $ssoAccountIDRefValid := hasPrefix "op://" $ssoAccountIDRef -}}
+{{- if and $opAvailable $ssoStartURLRefValid $ssoAccountIDRefValid -}}
 {{- $ssoStartURL := onepasswordRead $ssoStartURLRef -}}
 {{- $ssoAccountID := onepasswordRead $ssoAccountIDRef }}
 [profile {{ $profileName }}]
@@ -39,7 +41,7 @@ sso_region = {{ $ssoRegion }}
 sso_registration_scopes = sso:account:access
 {{- else }}
 # No AWS SSO profile rendered.
-# Store the SSO URL/account ID in 1Password, add local chezmoi data for
-# aws.ssoStartURLRef and aws.ssoAccountIDRef, then run:
+# Store the SSO URL/account ID in 1Password, add local chezmoi data with
+# op:// refs for aws.ssoStartURLRef and aws.ssoAccountIDRef, then run:
 #   chezmoi apply ~/.aws/config
 {{- end }}

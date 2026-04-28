@@ -57,6 +57,33 @@ _configure_aws_sso() {
   local region
   local sso_region
 
+  _write_aws_config_block() {
+    local tmp_file
+    tmp_file="$(mktemp "${TMPDIR:-/tmp}/chezmoi.aws.XXXXXX")"
+
+    if [[ -f "$config_file" ]]; then
+      awk '
+        /^\[data\.aws\]$/ { skip = 1; next }
+        /^\[/ && skip { skip = 0 }
+        !skip { print }
+      ' "$config_file" >"$tmp_file"
+    fi
+
+    cat >>"$tmp_file" <<EOF
+
+[data.aws]
+  ssoStartURLRef = "$sso_start_url_ref"
+  ssoAccountIDRef = "$sso_account_id_ref"
+  ssoSession = "$sso_session"
+  ssoRoleName = "$sso_role_name"
+  profileName = "$profile_name"
+  region = "$region"
+  ssoRegion = "$sso_region"
+EOF
+
+    mv "$tmp_file" "$config_file"
+  }
+
   if ! command -v aws >/dev/null 2>&1; then
     echo "AWS CLI is not installed yet; skipping AWS SSO profile check."
     return 0
@@ -125,27 +152,17 @@ _configure_aws_sso() {
     return 0
   fi
 
+  if [[ "$sso_start_url_ref" != op://* || "$sso_account_id_ref" != op://* ]]; then
+    _mark_failed "AWS SSO values must be 1Password secret refs that start with op://, not raw URLs or account IDs"
+    return 0
+  fi
+
   mkdir -p "$config_dir"
   if [[ -f "$config_file" && ! -f "$config_file.before-aws-sso" ]]; then
     cp "$config_file" "$config_file.before-aws-sso"
   fi
 
-  if [[ -f "$config_file" ]] && grep -q '^\[data\.aws\]' "$config_file"; then
-    echo "Updating existing [data.aws] in $config_file is not automated yet." >&2
-    echo "Edit that block if the refs are wrong, then rerun this script." >&2
-  else
-    cat >>"$config_file" <<EOF
-
-[data.aws]
-  ssoStartURLRef = "$sso_start_url_ref"
-  ssoAccountIDRef = "$sso_account_id_ref"
-  ssoSession = "$sso_session"
-  ssoRoleName = "$sso_role_name"
-  profileName = "$profile_name"
-  region = "$region"
-  ssoRegion = "$sso_region"
-EOF
-  fi
+  _write_aws_config_block
 
   chezmoi apply ~/.aws/config || {
     _mark_failed "failed to render ~/.aws/config"
