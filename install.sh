@@ -25,6 +25,24 @@ _mark_failed() {
   echo "Warning: $*" >&2
 }
 
+_trim_pasted_value() {
+  local value="$1"
+
+  # Trim surrounding whitespace and one layer of matching quotes. 1Password
+  # often copies secret references as "op://..." in rich clipboard contexts.
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  if [[ "$value" == \"*\" && "$value" == *\" ]]; then
+    value="${value:1:${#value}-2}"
+  elif [[ "$value" == \'*\' && "$value" == *\' ]]; then
+    value="${value:1:${#value}-2}"
+  fi
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+
+  printf '%s' "$value"
+}
+
 _prompt_1password() {
   echo ""
   echo "1Password sign-in is only required if this machine needs access to the private NBC News Nexus NPM registry."
@@ -129,8 +147,10 @@ EOF
 
   printf '1Password ref for SSO start URL: '
   read -r sso_start_url_ref
+  sso_start_url_ref="$(_trim_pasted_value "$sso_start_url_ref")"
   printf '1Password ref for AWS account ID: '
   read -r sso_account_id_ref
+  sso_account_id_ref="$(_trim_pasted_value "$sso_account_id_ref")"
   printf 'AWS profile name [%s]: ' "$profile_name"
   read -r profile_name_input
   profile_name="${profile_name_input:-$profile_name}"
