@@ -134,6 +134,12 @@ if command -v pyenv 1>/dev/null 2>&1; then
   eval "$(pyenv init -)"
 fi
 export PATH="$HOME/.local/bin:$PATH"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+
+# GitHub MCP token (Claude Code) — reuse gh CLI login
+if command -v gh >/dev/null 2>&1; then
+  export GITHUB_PERSONAL_ACCESS_TOKEN="$(gh auth token 2>/dev/null)"
+fi
 
 {{- $aws := index . "aws" | default dict -}}
 {{- $awsProfileName := index $aws "profileName" | default "work-poweruser" }}

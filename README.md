@@ -195,6 +195,11 @@ Old versioned Python runtimes should be managed through `pyenv` rather than
 Homebrew. Homebrew can remove deprecated formulae from the public tap; for
 example, `python@3.8` was no longer available on April 27, 2026.
 
+Homebrew requires third-party taps to be trusted before it loads their
+formulae, so prefer `homebrew/core` formulae (e.g. `snyk-cli` instead of
+`snyk/tap/snyk`). If a tap is unavoidable, mark it in the Brewfile with
+`brew "owner/tap/name", trusted: true`.
+
 Tools with Xcode-only build requirements, such as SwiftLint, should be installed
 separately after full Xcode is available.
 
