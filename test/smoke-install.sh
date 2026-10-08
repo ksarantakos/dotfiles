@@ -81,7 +81,14 @@ EOF
 #!/bin/sh
 printf 'op %s\n' "$*" >>"$TEST_LOG"
 EOF
-  chmod +x "$bin_dir/brew" "$bin_dir/op"
+  cat >"$bin_dir/aws" <<'EOF'
+#!/bin/sh
+printf 'aws %s\n' "$*" >>"$TEST_LOG"
+if [ "$1" = "configure" ] && [ "$2" = "list-profiles" ]; then
+  echo "work-poweruser"
+fi
+EOF
+  chmod +x "$bin_dir/brew" "$bin_dir/op" "$bin_dir/aws"
 
   yes_log="$workdir/yes.log"
   run_case "y" "$yes_log"
@@ -90,7 +97,7 @@ EOF
   assert_contains "brew install --cask 1password-cli" "$yes_log"
   assert_contains "brew install chezmoi" "$yes_log"
   assert_contains "op signin" "$yes_log"
-  assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
+  assert_contains "chezmoi init --branch master --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
   assert_contains "brew bundle --file $home_dir/.local/share/chezmoi/Brewfile" "$yes_log"
   assert_contains "chezmoi apply" "$yes_log"
 
@@ -101,7 +108,7 @@ EOF
   assert_contains "brew install --cask 1password-cli" "$no_log"
   assert_contains "brew install chezmoi" "$no_log"
   assert_not_contains "op signin" "$no_log"
-  assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$no_log"
+  assert_contains "chezmoi init --branch master --apply https://github.com/ksarantakos/dotfiles" "$no_log"
   assert_contains "brew bundle --file $home_dir/.local/share/chezmoi/Brewfile" "$no_log"
   assert_contains "chezmoi apply" "$no_log"
 
@@ -119,10 +126,18 @@ EOF
 [ "$1" = "--print-architecture" ] && echo "amd64"
 printf 'dpkg %s\n' "$*" >>"$TEST_LOG"
 EOF
-  chmod +x "$bin_dir/sudo" "$bin_dir/curl" "$bin_dir/dpkg"
+  cat >"$bin_dir/aws" <<'EOF'
+#!/bin/sh
+printf 'aws %s\n' "$*" >>"$TEST_LOG"
+if [ "$1" = "configure" ] && [ "$2" = "list-profiles" ]; then
+  echo "work-poweruser"
+fi
+EOF
+  chmod +x "$bin_dir/sudo" "$bin_dir/curl" "$bin_dir/dpkg" "$bin_dir/aws"
   cp "$bin_dir/sudo" "$bin_with_gh_dir/sudo"
   cp "$bin_dir/curl" "$bin_with_gh_dir/curl"
   cp "$bin_dir/dpkg" "$bin_with_gh_dir/dpkg"
+  cp "$bin_dir/aws" "$bin_with_gh_dir/aws"
   cat >"$bin_with_gh_dir/gh" <<'EOF'
 #!/bin/sh
 exit 0
@@ -140,7 +155,7 @@ EOF
   assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get update -qq" "$yes_log"
   assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y curl git zsh build-essential" "$yes_log"
   assert_not_contains "op signin" "$yes_log"
-  assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
+  assert_contains "chezmoi init --branch master --apply https://github.com/ksarantakos/dotfiles" "$yes_log"
   # bulk apt-get install from packages file
   assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y gnupg pandoc" "$yes_log"
   # gh install via official apt repo
@@ -157,7 +172,7 @@ EOF
   assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get update -qq" "$no_log"
   assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y curl git zsh build-essential" "$no_log"
   assert_not_contains "op signin" "$no_log"
-  assert_contains "chezmoi init --apply https://github.com/ksarantakos/dotfiles" "$no_log"
+  assert_contains "chezmoi init --branch master --apply https://github.com/ksarantakos/dotfiles" "$no_log"
   assert_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y gnupg pandoc" "$no_log"
   assert_not_contains "curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg" "$no_log"
   assert_not_contains "sudo env DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y gh" "$no_log"
