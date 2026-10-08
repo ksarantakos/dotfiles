@@ -218,8 +218,18 @@ _init_or_update_chezmoi() {
 
   if [[ -d "$source_dir/.git" ]]; then
     echo "Updating existing chezmoi source at $source_dir to $dotfiles_ref..."
-    git -C "$source_dir" fetch origin "$dotfiles_ref"
-    git -C "$source_dir" checkout -B "$dotfiles_ref" FETCH_HEAD
+    # Callers use `|| exit 1`, which disables set -e here, so check each step.
+    git -C "$source_dir" fetch origin "$dotfiles_ref" || return 1
+    if git -C "$source_dir" show-ref --verify --quiet "refs/heads/$dotfiles_ref"; then
+      git -C "$source_dir" checkout "$dotfiles_ref" || return 1
+    else
+      git -C "$source_dir" checkout -b "$dotfiles_ref" FETCH_HEAD || return 1
+    fi
+    # Fast-forward only so local unpushed commits are never discarded.
+    git -C "$source_dir" merge --ff-only FETCH_HEAD || {
+      echo "Could not fast-forward $source_dir to origin/$dotfiles_ref; resolve local changes and rerun." >&2
+      return 1
+    }
     chezmoi apply
   else
     chezmoi init --branch "$dotfiles_ref" --apply "$repo_url"
@@ -285,7 +295,7 @@ elif [[ "$OS" == "Linux" ]]; then
   _prompt_1password
 
   # Pull/update and apply dotfiles (also runs run_before_* scripts, e.g. Oh My Zsh install)
-  _init_or_update_chezmoi
+  _init_or_update_chezmoi || exit 1
 
   # Install packages listed in the repo (excludes gh and eza — handled below)
   apt_packages="$HOME/.local/share/chezmoi/apt-packages.txt"
